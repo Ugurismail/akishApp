@@ -12,4 +12,5 @@ urlpatterns = [
     path('login/', views.CustomLoginView.as_view(), name='login'),  # Giriş yap
     path('logout/', auth_views.LogoutView.as_view(next_page='question_list'), name='logout'),  # Çıkış yap
     path('profile/', views.profile, name='profile'),  # Profil sayfası
+    path('map/', views.question_map, name='question_map'),
 ]

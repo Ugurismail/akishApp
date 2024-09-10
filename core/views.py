@@ -111,3 +111,8 @@ def signup(request):
 class CustomLoginView(LoginView):
     form_class = CustomLoginForm
     template_name = 'core/login.html'
+
+def question_map(request):
+    questions = Question.objects.all()  # Tüm soruları alıyoruz
+    return render(request, 'core/question_map.html', {'questions': questions})
+

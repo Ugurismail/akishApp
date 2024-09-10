@@ -1,0 +1,69 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Soru Haritası</h2>
+    <div id="cy" style="width: 100%; height: 600px;"></div>
+</div>
+
+<script src="https://unpkg.com/cytoscape@3.19.1/dist/cytoscape.min.js"></script>
+
+<script>
+    var cy = cytoscape({
+        container: document.getElementById('cy'),
+
+        style: [
+            {
+                selector: 'node',
+                style: {
+                    'background-color': '#007bff',
+                    'label': 'data(label)',
+                    'text-valign': 'center',
+                    'color': '#fff',
+                }
+            },
+            {
+                selector: 'edge',
+                style: {
+                    'width': 2,
+                    'line-color': '#ccc',
+                    'target-arrow-color': '#ccc',
+                    'target-arrow-shape': 'triangle',
+                }
+            }
+        ],
+
+        elements: {
+            nodes: [
+                {% for question in questions %}
+                {
+                    data: { id: 'q{{ question.id }}', label: '{{ question.question_text }}' }
+                },
+                {% endfor %}
+            ],
+            edges: [
+                // Edges between questions will be dynamically generated based on relationships
+                {% for question in questions %}
+                {% for subquestion in question.subquestions.all %}
+                {
+                    data: { source: 'q{{ question.id }}', target: 'q{{ subquestion.id }}' }
+                },
+                {% endfor %}
+                {% endfor %}
+            ]
+        },
+
+        layout: {
+            name: 'breadthfirst',
+            directed: true,
+            padding: 10
+        }
+    });
+
+    // Node click event to redirect to question detail page
+    cy.on('tap', 'node', function(evt){
+    var nodeId = evt.target.id().substring(1); // Remove 'q' from id
+    window.location.href = '/question/' + nodeId + '/'; // Redirect to question detail
+    });
+</script>
+{% endblock %}
