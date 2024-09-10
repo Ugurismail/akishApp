@@ -1,0 +1,21 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Ana Sorular{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Ana Sorular</h2>
+        <a href="{% url 'add_question' %}" class="btn btn-primary float-right">Yeni Soru Ekle</a>
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for question in questions %}
+        <li class="list-group-item">
+            <a href="{% url 'question_detail' question.id %}">{{ question.question_text }}</a>
+        </li>
+        {% empty %}
+        <li class="list-group-item">Henüz soru yok.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

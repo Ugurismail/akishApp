@@ -1,0 +1,18 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="card mx-auto mt-5" style="max-width: 400px;">
+    <div class="card-header text-center">
+        <h2>Giriş Yap</h2>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}  <!-- Formu direkt olarak render ediyoruz -->
+            <button type="submit" class="btn btn-primary btn-block">Giriş Yap</button>
+        </form>
+    </div>
+    <div class="card-footer text-center">
+        <a href="{% url 'signup' %}" class="btn btn-link">Hesabın yok mu? Kayıt ol!</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h2>Alt Soru Ekle</h2>
+            <p>Soru: {{ parent_question.question_text }}</p>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="question_text">Alt Soru:</label>
+                    {{ question_form.question_text }} <!-- Bootstrap sınıfları formdan geliyor -->
+                </div>
+                <div class="form-group">
+                    <label for="answer_text">İlk Yanıt:</label>
+                    {{ answer_form.answer_text }} <!-- Aynı şekilde burada da -->
+                </div>
+                <button type="submit" class="btn btn-primary">Gönder</button>
+            </form>
+        </div>
+    </div>
+    <a href="{% url 'question_detail' parent_question.id %}" class="btn btn-secondary mt-3">Geri Dön</a>
+{% endblock %}

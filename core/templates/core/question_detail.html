@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h2>{{ question.question_text }}</h2>
+    </div>
+    <div class="card-body">
+        <h3>Yanıtlar:</h3>
+        <ul class="list-group mb-3">
+            {% for answer in answers %}
+            <li class="list-group-item">
+                {{ answer.answer_text }}
+                <small class="text-muted">
+                    <p>Yanıtlayan: {{ answer.user.username }} | Tarih: {{ answer.created_at|date:"d M Y, H:i" }}
+                        {% if answer.updated_at != answer.created_at %}
+                        [Düzenlendi: {{ answer.updated_at|date:"d M Y, H:i" }}]
+                        {% endif %}
+                    </p>
+                </small>
+                <a href="{% url 'edit_answer' answer.id %}" class="btn btn-sm btn-outline-primary">Yanıtı Düzenle</a>
+            </li>
+            {% endfor %}
+        </ul>
+        
+        <h3>Alt Sorular:</h3>
+        <ul class="list-group mb-3">
+            {% if subquestions %}
+                {% for subquestion in subquestions %}
+                <li class="list-group-item">
+                    <a href="{% url 'question_detail' subquestion.id %}">{{ subquestion.question_text }}</a>
+                </li>
+                {% endfor %}
+            {% else %}
+            <li class="list-group-item">Henüz alt soru yok.</li>
+            {% endif %}
+        </ul>
+
+        <a href="{% url 'add_subquestion' question.id %}" class="btn btn-primary">Alt Soru Ekle</a>
+        <a href="{% url 'question_list' %}" class="btn btn-secondary">Tüm Sorulara Geri Dön</a>
+    </div>
+</div>
+{% endblock %}
