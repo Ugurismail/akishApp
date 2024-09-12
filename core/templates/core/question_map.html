@@ -3,67 +3,130 @@
 {% block content %}
 <div class="container">
     <h2>Soru Haritası</h2>
-    <div id="cy" style="width: 100%; height: 600px;"></div>
+    <div id="chart" style="width: 100%; height: 800px; border: 1px solid #ccc;"></div>  <!-- Harita alanı -->
 </div>
 
-<script src="https://unpkg.com/cytoscape@3.19.1/dist/cytoscape.min.js"></script>
+<!-- D3.js kütüphanesini ekliyoruz -->
+<script src="https://d3js.org/d3.v6.min.js"></script>
 
 <script>
-    var cy = cytoscape({
-        container: document.getElementById('cy'),
+document.addEventListener('DOMContentLoaded', function () {
+    // Backend'den gelen question_nodes verisi
+    var questionNodes = {{ question_nodes|safe }};
+    console.log('Raw JSON:', questionNodes);
 
-        style: [
-            {
-                selector: 'node',
-                style: {
-                    'background-color': '#007bff',
-                    'label': 'data(label)',
-                    'text-valign': 'center',
-                    'color': '#fff',
-                }
-            },
-            {
-                selector: 'edge',
-                style: {
-                    'width': 2,
-                    'line-color': '#ccc',
-                    'target-arrow-color': '#ccc',
-                    'target-arrow-shape': 'triangle',
-                }
-            }
-        ],
+    // Nodes ve Links değişkenlerini tanımla
+    var nodes = questionNodes.nodes;
+    var links = questionNodes.links;
 
-        elements: {
-            nodes: [
-                {% for question in questions %}
-                {
-                    data: { id: 'q{{ question.id }}', label: '{{ question.question_text }}' }
-                },
-                {% endfor %}
-            ],
-            edges: [
-                // Edges between questions will be dynamically generated based on relationships
-                {% for question in questions %}
-                {% for subquestion in question.subquestions.all %}
-                {
-                    data: { source: 'q{{ question.id }}', target: 'q{{ subquestion.id }}' }
-                },
-                {% endfor %}
-                {% endfor %}
-            ]
-        },
+    console.log('Nodes: ', nodes);
+    console.log('Links: ', links);
 
-        layout: {
-            name: 'breadthfirst',
-            directed: true,
-            padding: 10
-        }
+    // SVG boyutları
+    var width = 1200;
+    var height = 800;
+
+    // Zoom ve pan işlemleri için zoom fonksiyonu
+    var zoom = d3.zoom()
+        .scaleExtent([0.5, 5])  
+        .on("zoom", function(event) {
+            svg.attr("transform", event.transform);  
+        });
+
+    // SVG oluşturma
+    var svg = d3.select("#chart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .call(zoom)
+        .append("g");
+
+    // Kuvvet tabanlı düzen (force-directed layout)
+    var simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(function(d) { return d.id; }).distance(100))  // Distance ayarlandı
+        .force("charge", d3.forceManyBody().strength(-200))  
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+    // Kenarlar (linkler) ekleniyor
+    var link = svg.append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(links)
+        .enter().append("line")
+        .attr("stroke-width", 2)
+        .attr("stroke", "#999");
+
+    // Düğümler (nodes) ekleniyor
+    var node = svg.append("g")
+        .attr("class", "nodes")
+        .selectAll("circle")
+        .data(nodes)
+        .enter().append("circle")
+        .attr("r", 20)
+        .attr("fill", function(d) { return d.is_starting_question ? "#007bff" : "#ff7f0e"; })  // Başlangıç sorusu için farklı renk
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended))
+        .on("click", function(event, d) {
+            // Node'a tıklayınca ilgili soru detayına yönlendirme
+            window.location.href = "/question/" + d.id.replace("q", "");
+        });
+
+    // Düğümler üzerine yazılar (label)
+    var label = svg.append("g")
+        .selectAll("text")
+        .data(nodes)
+        .enter().append("text")
+        .attr("dy", -25)
+        .attr("text-anchor", "middle")
+        .text(function(d) { return d.label; });
+
+    // Kuvvet simülasyonu her "tick" adımında düğüm ve kenarları güncelliyor
+    simulation.on("tick", function() {
+        link
+            .attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+
+        node
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; });
+
+        label
+            .attr("x", function(d) { return d.x; })
+            .attr("y", function(d) { return d.y - 10; });
     });
 
-    // Node click event to redirect to question detail page
-    cy.on('tap', 'node', function(evt){
-    var nodeId = evt.target.id().substring(1); // Remove 'q' from id
-    window.location.href = '/question/' + nodeId + '/'; // Redirect to question detail
-    });
+    // Düğümler arası etkileşim ve sürükleme fonksiyonları
+    node.call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
+
+    // Sürükleme başlatıldığında
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    // Sürüklenirken
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    // Sürükleme sona erdiğinde
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+});
+
 </script>
+
 {% endblock %}
+

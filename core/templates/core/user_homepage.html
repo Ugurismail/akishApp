@@ -1,0 +1,12 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<h2>Başlangıç Sorularınız</h2>
+<ul>
+    {% for starting_question in starting_questions %}
+        <li><a href="{% url 'question_detail' starting_question.question.id %}">{{ starting_question.question.question_text }}</a></li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'add_starting_question' %}" class="btn btn-primary">Başlangıç Sorusu Ekle</a>
+{% endblock %}
