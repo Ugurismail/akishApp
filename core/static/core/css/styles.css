@@ -1,0 +1,114 @@
+/* styles.css */
+
+/* Navbar arama sonuçları */
+#search-results {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    width: 250px;  /* Daha ince bir genişlik ayarlayın */
+    max-height: 400px;  /* Daha uzun bir yükseklik ayarlayın */
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 0;
+    right: 0;  /* Arama kutusunun sağına hizalayın */
+}
+
+#search-results ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#search-results li {
+    padding: 8px;
+    cursor: pointer;
+}
+
+#search-results li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Diğer stilleriniz varsa buraya ekleyin */
+
+/* Örneğin, alt-sorular kutusu stili */
+.alt-sorular-kutusu {
+    border: 1px solid #ddd;
+    padding: 10px;
+    background-color: #f9f9f9;
+    margin-top: 20px;
+}
+
+.alt-sorular-kutusu ul {
+    padding-left: 0;
+}
+
+.alt-sorular-kutusu li {
+    list-style-type: none;
+}
+
+/* Harita filtre arama sonuçları */
+#user-search-results {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 0;
+}
+
+#user-search-results ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#user-search-results li {
+    padding: 8px;
+    cursor: pointer;
+}
+
+#user-search-results li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Diğer stiller */
+#search-results p,
+#user-search-results p {
+    padding: 8px;
+    margin: 0;
+}
+
+/* styles.css */
+
+/* Existing styles... */
+
+/* Harita filtre arama sonuçları */
+#user-search-results {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 0;
+}
+
+#user-search-results ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#user-search-results li {
+    padding: 8px;
+    cursor: pointer;
+}
+
+#user-search-results li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Any additional styles */

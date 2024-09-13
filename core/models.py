@@ -1,17 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class Question(models.Model):
     question_text = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # Bir soru birden fazla ana soruya bağlanabilir (Many-to-Many)
     parent_questions = models.ManyToManyField('self', blank=True, related_name='subquestions', symmetrical=False)
-
-    # Soruyu soran kullanıcı
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='questions')
+    users = models.ManyToManyField(User, related_name='associated_questions', blank=True)
 
     def __str__(self):
         return self.question_text
@@ -23,8 +22,7 @@ class Question(models.Model):
         return self.subquestions.all()
 
     class Meta:
-        ordering = ['created_at']  # Soruları en son eklenen sırasına göre sıralar
-
+        ordering = ['created_at']    
 # Kullanıcının tanımladığı başlangıç soruları
 class StartingQuestion(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='starting_questions')
@@ -32,11 +30,6 @@ class StartingQuestion(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.question.question_text}"
-
-# Yanıt Modeli
-
-
-from django.utils import timezone
 
 class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
@@ -59,3 +52,16 @@ class Answer(models.Model):
 
     class Meta:
         ordering = ['created_at']
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    color = models.CharField(max_length=7, default='#000000')  # Varsayılan siyah
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
+                  '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
+                  '#bcbd22', '#17becf']
+        color = colors[instance.id % len(colors)]
+        UserProfile.objects.create(user=instance, color=color)

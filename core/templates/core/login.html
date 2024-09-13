@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+
 {% block content %}
 <div class="card mx-auto mt-5" style="max-width: 400px;">
     <div class="card-header text-center">
@@ -7,7 +8,7 @@
     <div class="card-body">
         <form method="post">
             {% csrf_token %}
-            {{ form.as_p }}  <!-- Formu direkt olarak render ediyoruz -->
+            {{ form.as_p }}
             <button type="submit" class="btn btn-primary btn-block">Giriş Yap</button>
         </form>
     </div>
