@@ -1,12 +1,177 @@
 /* styles.css */
 
-/* Arama sonuçları */
+/* Genel Stil Ayarları */
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: #f0f4f8; /* Açık gri-beyaz arka plan */
+    color: #1a1a1a; /* Koyu gri yazı rengi */
+    padding-top: 70px; /* Navbar yüksekliği kadar boşluk */
+}
+
+/* Navbar Renk ve Efektleri */
+.navbar {
+    background-color: #0b3d91; /* Koyu lacivert navbar */
+    transition: background-color 0.3s ease-in-out, padding 0.3s ease-in-out;
+}
+
+.navbar-shrink {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+.navbar-transparent {
+    background-color: rgba(11, 61, 145, 0.8) !important; /* Yarı saydam koyu lacivert */
+}
+
+/* Navbar Linkleri */
+.nav-link {
+    font-size: 1rem;
+    color: #ffffff !important; /* Beyaz metin */
+    transition: color 0.3s ease-in-out;
+}
+
+.nav-link:hover {
+    color: #ffd700 !important; /* Hover efekti için altın rengi */
+}
+
+/* Form Hataları */
+.form-error {
+    color: #ff4d4d; /* Kırmızı renk */
+    font-size: 0.9rem;
+}
+
+/* Kart Stilleri */
+.card {
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background-color: #ffffff; /* Beyaz arka plan */
+}
+
+.card-header {
+    background-color: #0b3d91; /* Koyu lacivert kart başlığı */
+    color: #ffffff; /* Beyaz başlık metni */
+    border-bottom: none;
+    padding: 1rem;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Buton Renkleri */
+.btn-primary {
+    background-color: #0b3d91; /* Koyu lacivert buton */
+    border-color: #0b3d91;
+    color: #ffffff; /* Beyaz metin */
+}
+
+.btn-primary:hover {
+    background-color: #092d6f; /* Daha koyu lacivert */
+    border-color: #092d6f;
+    color: #ffffff;
+}
+
+.btn-secondary {
+    background-color: #ffffff; /* Beyaz buton */
+    border-color: #0b3d91; /* Koyu lacivert kenarlık */
+    color: #0b3d91; /* Koyu lacivert metin */
+}
+
+.btn-secondary:hover {
+    background-color: #f0f0f0; /* Açık gri arka plan */
+    border-color: #092d6f;
+    color: #092d6f;
+}
+
+/* Link Renkleri */
+a {
+    color: #0b3d91; /* Koyu lacivert link */
+    text-decoration: none;
+}
+
+a:hover {
+    color: #ffd700; /* Hover için altın rengi */
+    text-decoration: underline;
+}
+
+/* Klavye Görselleştirmesi */
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+.keyboard-key {
+    width: 40px;
+    height: 40px;
+    margin: 2px;
+    background-color: #ffffff; /* Beyaz tuş */
+    color: #0b3d91; /* Koyu lacivert yazı */
+    text-align: center;
+    line-height: 40px;
+    border: 1px solid #0b3d91; /* Koyu lacivert kenarlık */
+    border-radius: 4px;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+.keyboard-key.highlight {
+    background-color: #ffd700; /* Vurgulanan tuşlar için altın rengi */
+    color: #0b3d91;
+}
+
+/* Yanıt Metni */
+.answer-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #333333; /* Koyu gri yazı rengi */
+    text-align: justify; /* İki yana yaslama */
+}
+
+/* Alt Sorular Kutusu */
+.alt-sorular-kutusu {
+    border: 1px solid #dddddd;
+    padding: 10px;
+    background-color: #ffffff; /* Beyaz arka plan */
+    margin-top: 20px;
+    border-radius: 8px;
+}
+
+.alt-sorular-kutusu ul {
+    padding-left: 0;
+}
+
+.alt-sorular-kutusu li {
+    list-style-type: none;
+}
+
+.alt-sorular-kutusu li a {
+    color: #0b3d91; /* Koyu lacivert link */
+}
+
+.alt-sorular-kutusu li a:hover {
+    color: #ffd700; /* Hover için altın rengi */
+}
+
+/* Link Ekleme Modalı */
+.modal-content {
+    background-color: #ffffff; /* Beyaz arka plan */
+    color: #1a1a1a; /* Koyu gri metin */
+}
+
+.modal-header {
+    background-color: #0b3d91; /* Koyu lacivert başlık */
+    color: #ffffff; /* Beyaz başlık metni */
+}
+
+.modal-footer {
+    background-color: #f0f4f8; /* Açık gri arka plan */
+}
+
+/* Arama Sonuçları */
 #search-results {
     position: absolute;
     top: 100%;
     left: 0;
-    background: white;
-    border: 1px solid #ccc;
+    background: #ffffff;
+    border: 1px solid #dddddd;
     width: 100%;
     max-height: 400px;
     overflow-y: auto;
@@ -23,65 +188,53 @@
 #search-results li {
     padding: 8px;
     cursor: pointer;
+    color: #0b3d91; /* Koyu lacivert metin */
 }
 
 #search-results li:hover {
     background-color: #f0f0f0;
 }
 
-
-/* Alt sorular kutusu */
-.alt-sorular-kutusu {
-    border: 1px solid #ddd;
-    padding: 10px;
-    background-color: #f9f9f9;
-    margin-top: 20px;
+/* Genel İçerik Stilleri */
+.container-fluid {
+    max-width: 1200px;
 }
 
-.alt-sorular-kutusu ul {
-    padding-left: 0;
+/* Başlıkların Büyük Harfe Dönüştürülmesini Engelleme */
+h1, h2, h3, h4, h5, h6 {
+    text-transform: none;
 }
 
-.alt-sorular-kutusu li {
-    list-style-type: none;
+/* Geri Dön Butonu */
+.btn-secondary {
+    margin-bottom: 20px;
 }
 
-/* Harita filtre arama sonuçları */
-#user-search-results {
-    position: absolute;
-    background: white;
-    border: 1px solid #ccc;
-    width: 100%;
-    max-height: 150px;
-    overflow-y: auto;
-    z-index: 1000;
-    margin-top: 0;
+/* Hover Efektleri */
+.btn-outline-secondary:hover {
+    background-color: #0b3d91;
+    color: #ffffff;
+    border-color: #0b3d91;
 }
 
-#user-search-results ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
+/* Form Kontrolleri */
+.form-control {
+    background-color: #ffffff;
+    color: #0b3d91;
+    border: 1px solid #0b3d91;
 }
 
-#user-search-results li {
-    padding: 8px;
-    cursor: pointer;
+.form-control:focus {
+    border-color: #ffd700;
+    box-shadow: 0 0 0 0.2rem rgba(255, 221, 0, 0.25);
 }
 
-#user-search-results li:hover {
-    background-color: #f0f0f0;
+/* Spinner (Yükleniyor İkonu) */
+.spinner-border {
+    border-color: #0b3d91;
 }
 
-/* Özel link stili */
-.custom-link {
-    color: maroon;
-    text-decoration: underline;
-}
-
-/* Diğer stiller */
-#search-results p,
-#user-search-results p {
-    padding: 8px;
-    margin: 0;
+.spinner-border::after {
+    border-top-color: #ffd700;
+    border-right-color: #ffd700;
 }

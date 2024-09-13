@@ -1,23 +1,39 @@
 {% extends 'core/base.html' %}
-
-{% block title %}Yanıtı Düzenle{% endblock %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="card">
-        <div class="card-header">
-            <h3>Yanıtı Düzenle</h3>
-        </div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="answer_text">Yanıt:</label>
-                    {{ form.answer_text }}
+<div class="card">
+    <div class="card-header">
+        <h3>Yanıtı Düzenle</h3>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <!-- Araç Çubuğu -->
+            <div class="btn-toolbar mb-2" role="toolbar">
+                <div class="btn-group me-2" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-format="bold">
+                        <i class="fas fa-bold"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-format="italic">
+                        <i class="fas fa-italic"></i>
+                    </button>
                 </div>
-                <button type="submit" class="btn btn-primary mt-3">Güncelle</button>
-            </form>
-        </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary insert-link-btn">
+                    <i class="fas fa-link"></i> Link Ekle
+                </button>
+            </div>
+            {{ form.answer_text }}
+            <button type="submit" class="btn btn-primary mt-2">Güncelle</button>
+        </form>
     </div>
 </div>
+
+<!-- Link Ekleme Modalı -->
+{% include 'core/link_modal.html' %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'core/js/answer_form.js' %}"></script>
 {% endblock %}

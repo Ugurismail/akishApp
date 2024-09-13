@@ -304,3 +304,4 @@ def delete_question(request, question_id):
         return redirect('user_homepage')
     else:
         return render(request, 'core/confirm_delete_question.html', {'question': question})
+    

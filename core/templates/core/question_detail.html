@@ -2,7 +2,7 @@
 {% load static %}
 {% load custom_tags %}
 
-{% block title %}{{ question.question_text }}{% endblock %}
+{% block title %}{{ question.question_text }} - CamiaF{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -14,7 +14,7 @@
                 <p class="text-muted">Soran: {{ question.user.username }} | Tarih: {{ question.created_at|date:"d M Y, H:i" }}</p>
                 <h4>Yanıtlar:</h4>
                 {% for answer in answers %}
-                    <p>{{ answer.answer_text|safe }}</p>
+                    <p style="text-align: justify;">{{ answer.answer_text|safe }}</p>
                     <small class="text-muted">
                         Yanıtlayan: {{ answer.user.username }} | Oluşturma Tarihi: {{ answer.created_at|date:"d M Y, H:i" }} 
                         {% if answer.updated_at %}
@@ -25,24 +25,41 @@
                         <a href="{% url 'edit_answer' answer.id %}" class="btn btn-sm btn-outline-primary">Yanıtı Düzenle</a>
                     {% endif %}
                     <hr>
+                {% empty %}
+                    <p>Henüz yanıt yok. İlk yanıtı siz verin!</p>
                 {% endfor %}
                 <!-- Yanıt Formu -->
                 <h4>Yanıt Yaz</h4>
                 <form method="post">
                     {% csrf_token %}
+                    <!-- Araç Çubuğu -->
+                    <div class="btn-toolbar mb-2" role="toolbar">
+                        <div class="btn-group me-2" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-format="bold">
+                                <i class="fa-solid fa-bold"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-format="italic">
+                                <i class="fa-solid fa-italic"></i>
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary insert-link-btn">
+                            <i class="fa-solid fa-link"></i> Link Ekle
+                        </button>
+                    </div>
                     {{ form.answer_text }}
-                    <button type="button" class="btn btn-secondary mt-2" id="insert-link-btn"><i class="fas fa-link"></i> Link Ekle</button>
                     <button type="submit" class="btn btn-primary mt-2">Gönder</button>
                 </form>
             </div>
         </div>
-        {% if request.user in question.users.all %}
-            <form action="{% url 'delete_question' question.id %}" method="post" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Soruyu Sil</button>
-            </form>
-        {% endif %}
-        <a href="{% url 'add_subquestion' question.id %}" class="btn btn-success mt-3"><i class="fas fa-plus"></i> Alt Soru Ekle</a>
+        <div class="d-flex justify-content-between">
+            {% if request.user in question.users.all %}
+                <form action="{% url 'delete_question' question.id %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash-alt"></i> Soruyu Sil</button>
+                </form>
+            {% endif %}
+            <a href="{% url 'add_subquestion' question.id %}" class="btn btn-success"><i class="fa-solid fa-plus"></i> Alt Soru Ekle</a>
+        </div>
     </div>
 
     <div class="col-md-4">
@@ -54,6 +71,8 @@
                 <li class="list-group-item">
                     <a href="{% url 'question_detail' subquestion.id %}">{{ subquestion.question_text }}</a>
                 </li>
+                {% empty %}
+                <li class="list-group-item">Bu sorunun henüz alt sorusu yok.</li>
                 {% endfor %}
             </ul>
         </div>
@@ -61,32 +80,7 @@
 </div>
 
 <!-- Link Ekleme Modalı -->
-<div class="modal fade" id="linkModal" tabindex="-1" aria-labelledby="linkModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form id="link-form">
-        <div class="modal-header">
-          <h5 class="modal-title" id="linkModalLabel">Link Ekle</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="link-url" class="form-label">Link URL'si:</label>
-            <input type="url" class="form-control" id="link-url" required>
-          </div>
-          <div class="mb-3">
-            <label for="link-text" class="form-label">Görünen Metin:</label>
-            <input type="text" class="form-control" id="link-text" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Ekle</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+{% include 'core/link_modal.html' %}
 
 {% endblock %}
 

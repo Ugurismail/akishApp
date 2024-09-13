@@ -21,17 +21,6 @@ class StartingQuestionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(StartingQuestionForm, self).__init__(*args, **kwargs)
         self.fields['question_text'].widget.attrs.update({'class': 'form-control'})
-
-class SignupForm(UserCreationForm):
-    class Meta:
-        model = User
-        fields = ['username', 'password1', 'password2']
-
-    def __init__(self, *args, **kwargs):
-        super(SignupForm, self).__init__(*args, **kwargs)
-        for fieldname in ['username', 'password1', 'password2']:
-            self.fields[fieldname].widget.attrs.update({'class': 'form-control'})
-
 class LoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
@@ -72,4 +61,28 @@ class AnswerForm(forms.ModelForm):
         super(AnswerForm, self).__init__(*args, **kwargs)
         self.fields['answer_text'].widget.attrs.update({'class': 'form-control'})
 
-# Diğer form sınıfları değişmeden kalabilir
+class SignupForm(UserCreationForm):
+    username = forms.CharField(label='Kullanıcı Adı', max_length=30)
+    password1 = forms.CharField(label='Şifre', widget=forms.PasswordInput)
+    password2 = forms.CharField(label='Şifre Tekrar', widget=forms.PasswordInput)
+
+    class Meta:
+        model = User
+        fields = ('username', 'password1', 'password2')
+
+    def __init__(self, *args, **kwargs):
+        super(SignupForm, self).__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({'class': 'form-control'})
+        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
+        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+
+        self.fields['username'].error_messages = {'required': 'Kullanıcı adı gereklidir.'}
+        self.fields['password1'].error_messages = {'required': 'Şifre gereklidir.'}
+        self.fields['password2'].error_messages = {'required': 'Şifre tekrar gereklidir.'}
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("Şifreler eşleşmiyor.")
+        return password2
