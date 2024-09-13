@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load static %}
 {% load custom_tags %}
 
 {% block title %}{{ question.question_text }}{% endblock %}
@@ -7,27 +8,41 @@
 <div class="row">
     <div class="col-md-8">
         <!-- Ana soru ve yanıtlar kısmı -->
-        <div class="card">
+        <div class="card mb-4">
             <div class="card-body">
                 <h3>{{ question.question_text }}</h3>
-                <p>Yanıtlayan: {{ question.user.username }} | Tarih: {{ question.created_at|date:"d M Y, H:i" }}</p>
+                <p class="text-muted">Soran: {{ question.user.username }} | Tarih: {{ question.created_at|date:"d M Y, H:i" }}</p>
                 <h4>Yanıtlar:</h4>
                 {% for answer in answers %}
-                    <p>{{ answer.answer_text }}</p>
+                    <p>{{ answer.answer_text|safe }}</p>
                     <small class="text-muted">
-                        <p>Yanıtlayan: {{ answer.user.username }} | Oluşturma Tarihi: {{ answer.created_at|date:"d M Y, H:i" }} 
+                        Yanıtlayan: {{ answer.user.username }} | Oluşturma Tarihi: {{ answer.created_at|date:"d M Y, H:i" }} 
                         {% if answer.updated_at %}
                             | Son Değiştirme Tarihi: {{ answer.updated_at|date:"d M Y, H:i" }}
                         {% endif %}
-                        </p>
-                    </small>                                             
+                    </small>
                     {% if answer.user == request.user %}
                         <a href="{% url 'edit_answer' answer.id %}" class="btn btn-sm btn-outline-primary">Yanıtı Düzenle</a>
                     {% endif %}
+                    <hr>
                 {% endfor %}
+                <!-- Yanıt Formu -->
+                <h4>Yanıt Yaz</h4>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.answer_text }}
+                    <button type="button" class="btn btn-secondary mt-2" id="insert-link-btn"><i class="fas fa-link"></i> Link Ekle</button>
+                    <button type="submit" class="btn btn-primary mt-2">Gönder</button>
+                </form>
             </div>
         </div>
-        <a href="{% url 'add_subquestion' question.id %}" class="btn btn-primary mt-3">Alt Soru Ekle</a>
+        {% if request.user in question.users.all %}
+            <form action="{% url 'delete_question' question.id %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Soruyu Sil</button>
+            </form>
+        {% endif %}
+        <a href="{% url 'add_subquestion' question.id %}" class="btn btn-success mt-3"><i class="fas fa-plus"></i> Alt Soru Ekle</a>
     </div>
 
     <div class="col-md-4">
@@ -45,12 +60,36 @@
     </div>
 </div>
 
-<style>
-    .alt-sorular-kutusu {
-        border: 1px solid #ddd;
-        padding: 10px;
-        background-color: #f9f9f9;
-    }
-</style>
+<!-- Link Ekleme Modalı -->
+<div class="modal fade" id="linkModal" tabindex="-1" aria-labelledby="linkModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="link-form">
+        <div class="modal-header">
+          <h5 class="modal-title" id="linkModalLabel">Link Ekle</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="link-url" class="form-label">Link URL'si:</label>
+            <input type="url" class="form-control" id="link-url" required>
+          </div>
+          <div class="mb-3">
+            <label for="link-text" class="form-label">Görünen Metin:</label>
+            <input type="text" class="form-control" id="link-text" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Ekle</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'core/js/answer_form.js' %}"></script>
 {% endblock %}

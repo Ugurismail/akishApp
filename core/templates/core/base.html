@@ -1,106 +1,81 @@
-{% load static %}  <!-- Add this at the very top of your template -->
+{% load static %}
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Mevcut head içeriği -->
     <title>{% block title %}Uygulama{% endblock %}</title>
-    <!-- Link Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <!-- Link Your Custom CSS -->
+    <!-- Bootswatch Tema (Örnek olarak Lux temasını kullanıyoruz) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.1.3/dist/lux/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <!-- Özel CSS -->
     <link rel="stylesheet" href="{% static 'core/css/styles.css' %}">
-    <!-- Include jQuery and Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'core/favicon.ico' %}" type="image/x-icon">
 </head>
-<body>
+<body style="font-family: 'Open Sans', sans-serif;">
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{% url 'user_homepage' %}">Soru Uygulaması</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" 
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <!-- Navbar links -->
-          <ul class="navbar-nav ml-auto">
-            <!-- Your existing navbar items -->
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'user_homepage' %}">Ana Sayfa</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'question_map' %}">Harita</a>
-            </li>
-            {% if user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'profile' %}">Profil</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'logout' %}">Çıkış Yap</a>
-            </li>
-            {% else %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'login' %}">Giriş Yap</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'signup' %}">Kayıt Ol</a>
-            </li>
-            {% endif %}
-          </ul>
-          <!-- Search Form -->
-          <form class="form-inline my-2 my-lg-0 position-relative" style="position: relative;">
-              <input class="form-control mr-sm-2" type="search" id="search-input" placeholder="Soru Ara" aria-label="Search" style="width: 250px;">
-              <div id="search-results"></div>
-          </form>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <!-- Sol taraftaki logo ve marka -->
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'user_homepage' %}">
+                <img src="{% static 'core/images/logo.png' %}" alt="Logo" width="30" height="30" class="d-inline-block align-top">
+                <span class="ms-2">Camia-F</span>
+            </a>
+            <!-- Hamburger Menü Butonu (Mobil için) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Menüyü Aç">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Navbar İçeriği -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Ortadaki Arama Formu -->
+                <form class="d-flex mx-auto" style="position: relative; width: 400px;">
+                    <input class="form-control me-2" type="search" id="search-input" placeholder="Soru Ara" aria-label="Search">
+                    <div id="search-results"></div>
+                </form>
+                <!-- Sağ taraftaki Navbar Öğeleri -->
+                <ul class="navbar-nav ms-auto">
+                    <!-- Mevcut navbar öğeleri -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'user_homepage' %}">Ana Sayfa</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'question_map' %}">Harita</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'profile' %}">Profil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">Çıkış Yap</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Giriş Yap</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'signup' %}">Kayıt Ol</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-      </nav>
+    </nav>
 
     <div class="container mt-4">
         {% block content %}
         {% endblock %}
     </div>
 
-    <!-- Your JavaScript code -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-          const searchInput = document.getElementById('search-input');
-          const searchResults = document.getElementById('search-results');
-
-          searchInput.addEventListener('keyup', function() {
-              const query = searchInput.value;
-              if (query.length > 1) {
-                  fetch(`/search/?q=${encodeURIComponent(query)}`)
-                      .then(response => response.json())
-                      .then(data => {
-                          searchResults.innerHTML = '';
-                          if (data.results.length > 0) {
-                              const ul = document.createElement('ul');
-                              data.results.forEach(item => {
-                                  const li = document.createElement('li');
-                                  li.textContent = item.question_text;
-                                  li.addEventListener('click', function() {
-                                      window.location.href = `/question/${item.id}/`;
-                                  });
-                                  ul.appendChild(li);
-                              });
-                              searchResults.appendChild(ul);
-                          } else {
-                              searchResults.innerHTML = '<p>Sonuç bulunamadı.</p>';
-                          }
-                      });
-              } else {
-                  searchResults.innerHTML = '';
-              }
-          });
-
-          // Arama sonuçları dışında bir yere tıklanınca sonuçları gizle
-          document.addEventListener('click', function(event) {
-              if (!searchInput.contains(event.target)) {
-                  searchResults.innerHTML = '';
-              }
-          });
-      });
-    </script>
+    <!-- Bootstrap JS ve diğer kütüphaneler -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Ana JavaScript dosyanız -->
+    <script src="{% static 'core/js/base.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

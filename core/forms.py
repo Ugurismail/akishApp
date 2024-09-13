@@ -1,35 +1,11 @@
+# forms.py
+
 from django import forms
 from django.contrib.auth.models import User
-from .models import Question, Answer,StartingQuestion
+from .models import Question, Answer, StartingQuestion
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
-class QuestionForm(forms.ModelForm):
-    class Meta:
-        model = Question
-        fields = ['question_text', 'parent_questions']
-        widgets = {
-            'question_text': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Soru metni girin'}),
-            'parent_questions': forms.SelectMultiple(attrs={'class': 'form-control'}),
-        }
 
-    def __init__(self, *args, **kwargs):
-        exclude_parent_questions = kwargs.pop('exclude_parent_questions', False)
-        super(QuestionForm, self).__init__(*args, **kwargs)
-        if exclude_parent_questions:
-            self.fields.pop('parent_questions')
-        self.fields['question_text'].widget.attrs.update({'class': 'form-control'})
-# Yanıt Ekleme/Düzenleme Formu
-class AnswerForm(forms.ModelForm):
-    class Meta:
-        model = Answer
-        fields = ['answer_text']
-        widgets = {
-            'answer_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Yanıtınızı buraya girin'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super(AnswerForm, self).__init__(*args, **kwargs)
-        self.fields['answer_text'].widget.attrs.update({'class': 'form-control'})
 
 class StartingQuestionForm(forms.ModelForm):
     # Aynı anda hem soru hem de cevap eklemek için alanlar
@@ -63,3 +39,37 @@ class LoginForm(AuthenticationForm):
     class Meta:
         model = User
         fields = ['username', 'password']
+
+class QuestionForm(forms.ModelForm):
+    answer_text = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Yanıtınızı buraya yazın'}),
+        required=False
+    )
+
+    class Meta:
+        model = Question
+        fields = ['question_text', 'answer_text']
+        widgets = {
+            'question_text': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Soru metni girin'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        exclude_parent_questions = kwargs.pop('exclude_parent_questions', False)
+        super(QuestionForm, self).__init__(*args, **kwargs)
+        if exclude_parent_questions:
+            self.fields.pop('parent_questions', None)
+        self.fields['question_text'].widget.attrs.update({'class': 'form-control'})
+
+class AnswerForm(forms.ModelForm):
+    class Meta:
+        model = Answer
+        fields = ['answer_text']
+        widgets = {
+            'answer_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Yanıtınızı buraya girin'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(AnswerForm, self).__init__(*args, **kwargs)
+        self.fields['answer_text'].widget.attrs.update({'class': 'form-control'})
+
+# Diğer form sınıfları değişmeden kalabilir

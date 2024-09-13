@@ -3,22 +3,21 @@
 {% block content %}
 <div class="card">
     <div class="card-header">
-        <h2>Yeni Soru Ekle</h2>
+        <h3>Yeni Soru Ekle</h3>
     </div>
     <div class="card-body">
         <form method="post">
             {% csrf_token %}
             <div class="form-group">
-                <label for="question_text">Soru:</label>
-                {{ question_form.question_text }}
+                {{ form.question_text.label_tag }}
+                {{ form.question_text }}
             </div>
             <div class="form-group">
-                <label for="answer_text">İlk Yanıt:</label>
-                {{ answer_form.answer_text }}
+                {{ form.answer_text.label_tag }}
+                {{ form.answer_text }}
             </div>
-            <button type="submit" class="btn btn-primary">Gönder</button>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
         </form>
-        <a href="{% url 'question_list' %}" class="btn btn-secondary mt-3">Tüm Sorulara Geri Dön</a>
     </div>
 </div>
 {% endblock %}
