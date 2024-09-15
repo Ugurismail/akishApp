@@ -7,17 +7,17 @@ document.addEventListener('DOMContentLoaded', function() {
     searchInput.addEventListener('keyup', function() {
         const query = searchInput.value;
         if (query.length > 1) {
-            fetch(`/search/?q=${encodeURIComponent(query)}`)
+            fetch(`/search/?q=${encodeURIComponent(query)}&ajax=1`)
                 .then(response => response.json())
                 .then(data => {
                     searchResults.innerHTML = '';
                     if (data.results.length > 0) {
                         const ul = document.createElement('ul');
-                        data.results.forEach(item => {
+                        data.results.forEach(question => {
                             const li = document.createElement('li');
-                            li.textContent = item.question_text;
+                            li.textContent = question.question_text;
                             li.addEventListener('click', function() {
-                                window.location.href = `/question/${item.id}/`;
+                                window.location.href = `/question/${question.id}/`;
                             });
                             ul.appendChild(li);
                         });
@@ -27,13 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
         } else {
-            searchResults.innerHTML = '';
-        }
-    });
-
-    // Arama sonuçları dışında bir yere tıklanınca sonuçları gizle
-    document.addEventListener('click', function(event) {
-        if (!searchInput.contains(event.target)) {
             searchResults.innerHTML = '';
         }
     });

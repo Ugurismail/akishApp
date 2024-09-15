@@ -1,16 +1,242 @@
+<!-- templates/profile.html -->
+
 {% extends 'core/base.html' %}
-
-{% block title %}Profil{% endblock %}
-
+{% load static %}
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h2>Profil Bilgileri</h2>
-    </div>
-    <div class="card-body">
-        <p><strong>Kullanıcı Adı:</strong> {{ user.username }}</p>
-        <p><strong>E-posta:</strong> {{ user.email }}</p>
-    </div>
+<div class="container mt-4">
+    <h1>{{ profile_user.username }}'ın Profili</h1>
+
+    {% if profile_user == request.user %}
+        <div class="profile-tabs">
+            <a href="#" id="tab-questions" class="active">Soru-Yanıtlar</a>
+            <a href="#" id="tab-saved">Kaydedilenler</a>
+            <a href="#" id="tab-stats">İstatistikler</a>
+        </div>
+
+        <div class="profile-content" id="content-questions">
+            <!-- Kullanıcının sorduğu sorular ve yanıtlar -->
+            <h4>Sorduğunuz Sorular</h4>
+            <ul>
+                {% for question in questions %}
+                    <li>
+                        <a href="{% url 'question_detail' question.id %}">
+                            {{ question.question_text }}
+                        </a>
+                    </li>
+                {% empty %}
+                    <li>Henüz soru sormadınız.</li>
+                {% endfor %}
+            </ul>
+
+            <h4>Verdiğiniz Yanıtlar</h4>
+            <ul>
+                {% for answer in answers %}
+                    <li>
+                        <p>{{ answer.answer_text|safe }}</p>
+                        <small>
+                            Soru:
+                            <a href="{% url 'question_detail' answer.question.id %}">
+                                {{ answer.question.question_text }}
+                            </a>
+                        </small>
+                    </li>
+                {% empty %}
+                    <li>Henüz yanıt vermediniz.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="profile-content" id="content-saved" style="display: none;">
+            <!-- Kaydedilen sorular ve yanıtlar -->
+            <h4>Kaydettiğiniz Sorular</h4>
+            <ul>
+                {% if saved_questions %}
+                    {% for item in saved_questions %}
+                        <li>
+                            <a href="{% url 'question_detail' item.question.id %}">
+                                {{ item.question.question_text }}
+                            </a>
+                            <a href="{% url 'delete_saved_item' item.id %}" class="text-danger ms-2">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li>Henüz kaydettiğiniz soru yok.</li>
+                    {% endfor %}
+                {% endif %}
+            </ul>
+
+            <h4>Kaydettiğiniz Yanıtlar</h4>
+            <ul>
+                {% if saved_answers %}
+                    {% for item in saved_answers %}
+                        <li>
+                            <p>{{ item.answer.answer_text|safe }}</p>
+                            <small>
+                                Soru:
+                                <a href="{% url 'question_detail' item.answer.question.id %}">
+                                    {{ item.answer.question.question_text }}
+                                </a>
+                            </small>
+                            <a href="{% url 'delete_saved_item' item.id %}" class="text-danger ms-2">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li>Henüz kaydettiğiniz yanıt yok.</li>
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+
+        <div class="profile-content" id="content-stats" style="display: none;">
+            <!-- İstatistikler -->
+            <h4>İstatistikler</h4>
+            <p>Toplam Sorduğunuz Soru Sayısı: <strong>{{ questions.count }}</strong></p>
+            <p>Toplam Verdiğiniz Yanıt Sayısı: <strong>{{ answers.count }}</strong></p>
+
+            <div class="row">
+                <!-- En Çok Kullanılan Kelimeler -->
+                <div class="col-md-6">
+                    <h5>En Çok Kullandığınız 10 Kelime</h5>
+                    <form method="get" id="word-exclude-form">
+                        <div class="input-group mb-2">
+                            <input type="text" name="exclude_words" placeholder="Hariç tutmak istediğiniz kelimeler (virgülle ayırın)" class="form-control" value="{{ exclude_words }}">
+                            <button type="submit" class="btn btn-primary">Güncelle</button>
+                        </div>
+                    </form>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Kelime</th>
+                                <th>Sayısı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for word, count in top_words %}
+                                <tr>
+                                    <td>{{ word }}</td>
+                                    <td>{{ count }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="2">Kelime bulunamadı.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Kelime Kullanım Sayısı Arama -->
+                <div class="col-md-6">
+                    <h5>Kelime Kullanım Sayısı</h5>
+                    <form method="get" id="word-usage-form">
+                        <div class="input-group mb-2">
+                            <input type="text" name="search_word" placeholder="Aramak istediğiniz kelime" class="form-control" value="{{ search_word }}">
+                            <button type="submit" class="btn btn-primary">Ara</button>
+                        </div>
+                    </form>
+                    {% if word_usage_data %}
+                        <p>"<strong>{{ word_usage_data.word }}</strong>" kelimesini toplam <strong>{{ word_usage_data.total_count }}</strong> kez kullandınız.</p>
+                        <ul>
+                            <li>Başlıklarda: {{ word_usage_data.question_count }} kez</li>
+                            <li>Yanıtlarda: {{ word_usage_data.answer_count }} kez</li>
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Diğer kullanıcıların profili -->
+        <h4>{{ profile_user.username }}'ın Sorduğu Sorular</h4>
+        <ul>
+            {% for question in questions %}
+                <li>
+                    <a href="{% url 'question_detail' question.id %}">
+                        {{ question.question_text }}
+                    </a>
+                </li>
+            {% empty %}
+                <li>Bu kullanıcı henüz soru sormamış.</li>
+            {% endfor %}
+        </ul>
+
+        <h4>{{ profile_user.username }}'ın Verdiği Yanıtlar</h4>
+        <ul>
+            {% for answer in answers %}
+                <li>
+                    <p>{{ answer.answer_text|safe }}</p>
+                    <small>
+                        Soru:
+                        <a href="{% url 'question_detail' answer.question.id %}">
+                            {{ answer.question.question_text }}
+                        </a>
+                    </small>
+                </li>
+            {% empty %}
+                <li>Bu kullanıcı henüz yanıt vermemiş.</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 </div>
-<a href="{% url 'user_homepage' %}" class="btn btn-secondary mt-3">Ana Sayfaya Dön</a>
+{% endblock %}
+
+{% block extra_js %}
+{% if profile_user == request.user %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabQuestions = document.getElementById('tab-questions');
+        const tabSaved = document.getElementById('tab-saved');
+        const tabStats = document.getElementById('tab-stats');
+        const contentQuestions = document.getElementById('content-questions');
+        const contentSaved = document.getElementById('content-saved');
+        const contentStats = document.getElementById('content-stats');
+
+        // Sekmeler arası geçiş fonksiyonu
+        function showTab(tabName) {
+            tabQuestions.classList.remove('active');
+            tabSaved.classList.remove('active');
+            tabStats.classList.remove('active');
+            contentQuestions.style.display = 'none';
+            contentSaved.style.display = 'none';
+            contentStats.style.display = 'none';
+
+            if (tabName === 'questions') {
+                tabQuestions.classList.add('active');
+                contentQuestions.style.display = 'block';
+            } else if (tabName === 'saved') {
+                tabSaved.classList.add('active');
+                contentSaved.style.display = 'block';
+            } else if (tabName === 'stats') {
+                tabStats.classList.add('active');
+                contentStats.style.display = 'block';
+            }
+        }
+
+        // Sekme butonlarına tıklama olayları
+        tabQuestions.addEventListener('click', function(e) {
+            e.preventDefault();
+            showTab('questions');
+            history.replaceState(null, '', '?active_tab=questions');
+        });
+
+        tabSaved.addEventListener('click', function(e) {
+            e.preventDefault();
+            showTab('saved');
+            history.replaceState(null, '', '?active_tab=saved');
+        });
+
+        tabStats.addEventListener('click', function(e) {
+            e.preventDefault();
+            showTab('stats');
+            history.replaceState(null, '', '?active_tab=stats');
+        });
+
+        // Sayfa yüklendiğinde aktif sekmeyi kontrol et
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('active_tab') || 'questions';
+        showTab(activeTab);
+    });
+</script>
+{% endif %}
 {% endblock %}

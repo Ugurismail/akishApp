@@ -14,7 +14,7 @@ class Question(models.Model):
     parent_questions = models.ManyToManyField('self', blank=True, related_name='subquestions', symmetrical=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='questions')
     users = models.ManyToManyField(User, related_name='associated_questions', blank=True)
-
+    votes = models.IntegerField(default=0)      
     def __str__(self):
         return self.question_text
 
@@ -41,7 +41,7 @@ class Answer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='answers')
-
+    votes = models.IntegerField(default=0)
     ALLOWED_TAGS = ['a', 'p', 'br', 'strong', 'em']
 
     def __str__(self):
@@ -75,3 +75,21 @@ def create_user_profile(sender, instance, created, **kwargs):
                   '#bcbd22', '#17becf']
         color = colors[instance.id % len(colors)]
         UserProfile.objects.create(user=instance, color=color)
+
+class Vote(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True, blank=True)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True, blank=True)
+    value = models.IntegerField()  # +1 veya -1
+
+    class Meta:
+        unique_together = ('user', 'question', 'answer')  # Her kullanıcı her içerik için bir oy verebilir
+
+class SavedItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True, blank=True)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True, blank=True)
+    saved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'question', 'answer')  # Her kullanıcı her içerik için bir kez kaydedebilir

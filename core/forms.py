@@ -86,3 +86,6 @@ class SignupForm(UserCreationForm):
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError("Şifreler eşleşmiyor.")
         return password2
+
+class WordUsageForm(forms.Form):
+    word = forms.CharField(label='Kelime', max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Aramak istediğiniz kelime'}))

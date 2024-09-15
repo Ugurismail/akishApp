@@ -1,49 +1,116 @@
+<!-- templates/question_detail.html -->
+
 {% extends 'core/base.html' %}
 {% load static %}
-{% load custom_tags %}
-
 {% block title %}{{ question.question_text }} - CamiaF{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <!-- Ana soru ve yanıtlar kısmı -->
-        <div class="card mb-4">
-            <div class="card-body">
+<div class="container mt-4">
+    <div class="row">
+        <!-- Ana İçerik -->
+        <div class="col-md-8">
+            <!-- Soru Başlığı ve Aksiyonlar -->
+            <div class="mb-4">
                 <h3>{{ question.question_text }}</h3>
-                <p class="text-muted">Soran: {{ question.user.username }} | Tarih: {{ question.created_at|date:"d M Y, H:i" }}</p>
-                <h4>Yanıtlar:</h4>
-                {% for answer in answers %}
-                    <p style="text-align: justify;">{{ answer.answer_text|safe }}</p>
-                    <small class="text-muted">
-                        Yanıtlayan: {{ answer.user.username }} | Oluşturma Tarihi: {{ answer.created_at|date:"d M Y, H:i" }} 
-                        {% if answer.updated_at %}
-                            | Son Değiştirme Tarihi: {{ answer.updated_at|date:"d M Y, H:i" }}
+                <div class="d-flex align-items-center justify-content-between text-muted">
+                    <!-- Aksiyon İkonları -->
+                    <div class="action-icons">
+                        <a href="#" class="vote-btn" data-content-type="question" data-object-id="{{ question.id }}" data-value="1" title="Beğen">
+                            <i class="fas fa-arrow-up"></i>
+                        </a>
+                        <span id="question-votes">{{ question.votes }}</span>
+                        <a href="#" class="vote-btn" data-content-type="question" data-object-id="{{ question.id }}" data-value="-1" title="Beğenme">
+                            <i class="fas fa-arrow-down"></i>
+                        </a>
+                        <a href="#" class="save-btn ms-2" data-content-type="question" data-object-id="{{ question.id }}" title="Kaydet">
+                            <i class="{% if user_has_saved_question %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                        </a>
+                        {% if request.user == question.user %}
+                            <a href="{% url 'delete_question' question.id %}" class="ms-2 text-danger" title="Soruyu Sil">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
                         {% endif %}
-                    </small>
-                    {% if answer.user == request.user %}
-                        <a href="{% url 'edit_answer' answer.id %}" class="btn btn-sm btn-outline-primary">Yanıtı Düzenle</a>
-                    {% endif %}
-                    <hr>
-                {% empty %}
+                    </div>
+                    <!-- Kullanıcı Adı ve Tarih -->
+                    <div class="answer-meta text-end">
+                        <a href="{% url 'profile_with_username' question.user.username %}" class="text-decoration-none">{{ question.user.username }}</a><br>
+                        <small>
+                            {{ question.created_at|date:"d.m.Y H:i" }}
+                            {% if question.updated_at and question.updated_at != question.created_at %}
+                                ~ {{ question.updated_at|date:"H:i" }}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yanıtlar -->
+            <div>
+                {% if answers %}
+                    {% for answer in answers %}
+                        <div class="mb-4">
+                            <p class="answer-text">{{ answer.answer_text|safe }}</p>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <!-- Aksiyon İkonları -->
+                                <div class="action-icons">
+                                    <a href="#" class="vote-btn" data-content-type="answer" data-object-id="{{ answer.id }}" data-value="1" title="Beğen">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </a>
+                                    <span id="answer-votes-{{ answer.id }}">{{ answer.votes }}</span>
+                                    <a href="#" class="vote-btn" data-content-type="answer" data-object-id="{{ answer.id }}" data-value="-1" title="Beğenme">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </a>
+                                    <a href="#" class="save-btn ms-2" data-content-type="answer" data-object-id="{{ answer.id }}" title="Kaydet">
+                                        <i class="{% if answer.user_has_saved %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                                    </a>
+                                    {% if answer.user == request.user %}
+                                        <a href="{% url 'edit_answer' answer.id %}" class="ms-2" title="Düzenle">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                <!-- Kullanıcı Adı ve Tarih -->
+                                <div class="answer-meta text-end">
+                                    {% if answer.user %}
+                                        <a href="{% url 'profile_with_username' answer.user.username %}" class="text-decoration-none">{{ answer.user.username }}</a><br>
+                                    {% else %}
+                                        <span>Anonim Kullanıcı</span><br>
+                                    {% endif %}
+                                    <small>
+                                        {{ answer.created_at|date:"d.m.Y H:i" }}
+                                        {% if answer.updated_at and answer.updated_at != answer.created_at %}
+                                            ~ {{ answer.updated_at|date:"H:i" }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                    {% endfor %}
+                {% else %}
                     <p>Henüz yanıt yok. İlk yanıtı siz verin!</p>
-                {% endfor %}
-                <!-- Yanıt Formu -->
-                <h4>Yanıt Yaz</h4>
+                {% endif %}
+            </div>
+
+            <!-- Yanıt Yazma Formu -->
+            <div class="mt-4">
                 <form method="post">
                     {% csrf_token %}
                     <!-- Araç Çubuğu -->
                     <div class="btn-toolbar mb-2" role="toolbar">
                         <div class="btn-group me-2" role="group">
-                            <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-format="bold">
-                                <i class="fa-solid fa-bold"></i>
+                            <button type="button" class="btn btn-outline-secondary format-btn" data-format="bold">
+                                <i class="fas fa-bold"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary format-btn" data-format="italic">
-                                <i class="fa-solid fa-italic"></i>
+                            <button type="button" class="btn btn-outline-secondary format-btn" data-format="italic">
+                                <i class="fas fa-italic"></i>
                             </button>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary insert-link-btn">
-                            <i class="fa-solid fa-link"></i> Link Ekle
+                        <button type="button" class="btn btn-outline-secondary insert-link-btn">
+                            <i class="fas fa-link"></i> Link Ekle
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary insert-reference-btn">
+                            (bkz:soru)
                         </button>
                     </div>
                     {{ form.answer_text }}
@@ -51,39 +118,43 @@
                 </form>
             </div>
         </div>
-        <div class="d-flex justify-content-between">
-            {% if request.user in question.users.all %}
-                <form action="{% url 'delete_question' question.id %}" method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash-alt"></i> Soruyu Sil</button>
-                </form>
-            {% endif %}
-            <a href="{% url 'add_subquestion' question.id %}" class="btn btn-success"><i class="fa-solid fa-plus"></i> Alt Soru Ekle</a>
-        </div>
-    </div>
 
-    <div class="col-md-4">
-        <!-- Sağdaki alt sorular kutusu -->
-        <div class="alt-sorular-kutusu">
-            <h4>Alt Sorular:</h4>
-            <ul class="list-group">
-                {% for subquestion in subquestions %}
-                <li class="list-group-item">
-                    <a href="{% url 'question_detail' subquestion.id %}">{{ subquestion.question_text }}</a>
-                </li>
-                {% empty %}
-                <li class="list-group-item">Bu sorunun henüz alt sorusu yok.</li>
-                {% endfor %}
-            </ul>
+        <!-- Alt Sorular Sağ Tarafta -->
+        <div class="col-md-4">
+            <div class="alt-sorular">
+                <h4>Alt Sorular</h4>
+                <ul>
+                    {% if question.subquestions.all %}
+                        {% for subquestion in question.subquestions.all %}
+                            <li>
+                                <a href="{% url 'question_detail' subquestion.id %}">
+                                    {{ subquestion.question_text }}
+                                </a>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-user"></i> {{ subquestion.user.username }}
+                                </small>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li>Bu sorunun henüz alt sorusu yok.</li>
+                    {% endif %}
+                </ul>
+                <a href="{% url 'add_subquestion' question.id %}" class="btn btn-outline-secondary mt-3">
+                    <i class="fas fa-plus"></i> Alt Soru Ekle
+                </a>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Link Ekleme Modalı -->
+<!-- Modallar -->
 {% include 'core/link_modal.html' %}
+{% include 'core/reference_modal.html' %}
 
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'core/js/answer_form.js' %}"></script>
+<script src="{% static 'core/js/vote_save.js' %}"></script>
 {% endblock %}

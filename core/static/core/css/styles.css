@@ -1,240 +1,265 @@
 /* styles.css */
 
-/* Genel Stil Ayarları */
+/* Genel Ayarlar */
 body {
-    font-family: 'Open Sans', sans-serif;
-    background-color: #f0f4f8; /* Açık gri-beyaz arka plan */
-    color: #1a1a1a; /* Koyu gri yazı rengi */
-    padding-top: 70px; /* Navbar yüksekliği kadar boşluk */
+    font-family: 'Arial', sans-serif;
+    background-color: #f2f2f2;
+    color: #333;
+    margin: 0;
+    padding-top: 70px;
 }
 
-/* Navbar Renk ve Efektleri */
+/* Navbar */
 .navbar {
-    background-color: #0b3d91; /* Koyu lacivert navbar */
-    transition: background-color 0.3s ease-in-out, padding 0.3s ease-in-out;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
 }
 
-.navbar-shrink {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
+.navbar .navbar-brand, .navbar .nav-link {
+    color: #333 !important;
 }
 
-.navbar-transparent {
-    background-color: rgba(11, 61, 145, 0.8) !important; /* Yarı saydam koyu lacivert */
+.navbar .navbar-brand:hover, .navbar .nav-link:hover {
+    color: #007bff !important;
 }
 
-/* Navbar Linkleri */
-.nav-link {
-    font-size: 1rem;
-    color: #ffffff !important; /* Beyaz metin */
-    transition: color 0.3s ease-in-out;
+.navbar .navbar-brand:focus, .navbar .nav-link:focus {
+    color: #0056b3 !important;
 }
 
-.nav-link:hover {
-    color: #ffd700 !important; /* Hover efekti için altın rengi */
+.navbar .dropdown-menu {
+    background-color: #ffffff;
 }
 
-/* Form Hataları */
-.form-error {
-    color: #ff4d4d; /* Kırmızı renk */
-    font-size: 0.9rem;
+.navbar .dropdown-item {
+    color: #333;
 }
 
-/* Kart Stilleri */
+.navbar .dropdown-item:hover {
+    background-color: #f2f2f2;
+    color: #007bff;
+}
+
+/* Başlıklar */
+h1, h2, h3, h4, h5, h6 {
+    color: #333;
+    margin-top: 0;
+}
+
+/* Kartlar */
 .card {
-    border: 1px solid #dddddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    background-color: #ffffff; /* Beyaz arka plan */
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 20px;
 }
 
 .card-header {
-    background-color: #0b3d91; /* Koyu lacivert kart başlığı */
-    color: #ffffff; /* Beyaz başlık metni */
-    border-bottom: none;
-    padding: 1rem;
-    border-radius: 8px 8px 0 0;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 15px;
 }
 
-/* Buton Renkleri */
+.card-body {
+    padding: 15px;
+}
+
+/* Butonlar */
+.btn {
+    border-radius: 4px;
+}
+
 .btn-primary {
-    background-color: #0b3d91; /* Koyu lacivert buton */
-    border-color: #0b3d91;
-    color: #ffffff; /* Beyaz metin */
+    background-color: #007bff;
+    border-color: #007bff;
+    color: #fff;
 }
 
 .btn-primary:hover {
-    background-color: #092d6f; /* Daha koyu lacivert */
-    border-color: #092d6f;
-    color: #ffffff;
+    background-color: #0056b3;
+    border-color: #0056b3;
 }
 
-.btn-secondary {
-    background-color: #ffffff; /* Beyaz buton */
-    border-color: #0b3d91; /* Koyu lacivert kenarlık */
-    color: #0b3d91; /* Koyu lacivert metin */
+.btn-outline-secondary {
+    color: #333;
+    border-color: #333;
 }
 
-.btn-secondary:hover {
-    background-color: #f0f0f0; /* Açık gri arka plan */
-    border-color: #092d6f;
-    color: #092d6f;
+.btn-outline-secondary:hover {
+    background-color: #333;
+    color: #fff;
 }
 
-/* Link Renkleri */
+/* Linkler */
 a {
-    color: #0b3d91; /* Koyu lacivert link */
+    color: #007bff;
     text-decoration: none;
 }
 
 a:hover {
-    color: #ffd700; /* Hover için altın rengi */
+    color: #0056b3;
     text-decoration: underline;
 }
 
-/* Klavye Görselleştirmesi */
-.keyboard-row {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 5px;
-}
-
-.keyboard-key {
-    width: 40px;
-    height: 40px;
-    margin: 2px;
-    background-color: #ffffff; /* Beyaz tuş */
-    color: #0b3d91; /* Koyu lacivert yazı */
-    text-align: center;
-    line-height: 40px;
-    border: 1px solid #0b3d91; /* Koyu lacivert kenarlık */
+/* Formlar */
+.form-control {
     border-radius: 4px;
-    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+    border: 1px solid #ced4da;
 }
 
-.keyboard-key.highlight {
-    background-color: #ffd700; /* Vurgulanan tuşlar için altın rengi */
-    color: #0b3d91;
+.form-control:focus {
+    border-color: #80bdff;
+    outline: 0;
 }
 
 /* Yanıt Metni */
 .answer-text {
     font-size: 1rem;
     line-height: 1.6;
-    color: #333333; /* Koyu gri yazı rengi */
-    text-align: justify; /* İki yana yaslama */
+    margin-bottom: 10px;
 }
 
-/* Alt Sorular Kutusu */
-.alt-sorular-kutusu {
-    border: 1px solid #dddddd;
-    padding: 10px;
-    background-color: #ffffff; /* Beyaz arka plan */
-    margin-top: 20px;
-    border-radius: 8px;
+/* Aksiyon İkonları */
+.action-icons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 
-.alt-sorular-kutusu ul {
-    padding-left: 0;
+.action-icons a {
+    color: #333;
+    margin-left: 10px;
+    font-size: 1rem;
 }
 
-.alt-sorular-kutusu li {
-    list-style-type: none;
+.action-icons a:hover {
+    color: #000;
 }
 
-.alt-sorular-kutusu li a {
-    color: #0b3d91; /* Koyu lacivert link */
+.action-icons span {
+    margin-left: 5px;
+    font-size: 0.9rem;
 }
 
-.alt-sorular-kutusu li a:hover {
-    color: #ffd700; /* Hover için altın rengi */
-}
-
-/* Link Ekleme Modalı */
-.modal-content {
-    background-color: #ffffff; /* Beyaz arka plan */
-    color: #1a1a1a; /* Koyu gri metin */
-}
-
-.modal-header {
-    background-color: #0b3d91; /* Koyu lacivert başlık */
-    color: #ffffff; /* Beyaz başlık metni */
-}
-
-.modal-footer {
-    background-color: #f0f4f8; /* Açık gri arka plan */
-}
-
-/* Arama Sonuçları */
-#search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: #ffffff;
-    border: 1px solid #dddddd;
-    width: 100%;
-    max-height: 400px;
+/* Alt Sorular */
+.alt-sorular {
+    position: sticky;
+    top: 70px;
+    max-height: calc(100vh - 70px);
     overflow-y: auto;
-    z-index: 1000;
+    padding: 10px;
+    background-color: #ffffff;
+    border-left: 1px solid #e0e0e0;
+}
+
+.alt-sorular h4 {
     margin-top: 0;
 }
 
-#search-results ul {
-    list-style-type: none;
-    margin: 0;
+.alt-sorular ul {
+    list-style: none;
     padding: 0;
 }
 
-#search-results li {
-    padding: 8px;
+.alt-sorular li {
+    margin-bottom: 10px;
+}
+
+.alt-sorular a {
+    color: #007bff;
+}
+
+.alt-sorular a:hover {
+    color: #0056b3;
+}
+
+/* Arama Sonuçları ve Modal */
+#search-results, #reference-search-results {
+    position: absolute;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+#search-results li, #reference-search-results li {
+    padding: 10px;
     cursor: pointer;
-    color: #0b3d91; /* Koyu lacivert metin */
 }
 
-#search-results li:hover {
-    background-color: #f0f0f0;
+#search-results li:hover, #reference-search-results li:hover {
+    background-color: #f2f2f2;
 }
 
-/* Genel İçerik Stilleri */
-.container-fluid {
-    max-width: 1200px;
-}
-
-/* Başlıkların Büyük Harfe Dönüştürülmesini Engelleme */
-h1, h2, h3, h4, h5, h6 {
-    text-transform: none;
-}
-
-/* Geri Dön Butonu */
-.btn-secondary {
+/* Profil Sayfası */
+.profile-tabs {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
     margin-bottom: 20px;
 }
 
-/* Hover Efektleri */
-.btn-outline-secondary:hover {
-    background-color: #0b3d91;
-    color: #ffffff;
-    border-color: #0b3d91;
+.profile-tabs a {
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    border: 1px solid #e0e0e0;
+    border-bottom: none;
+    margin-right: 5px;
+    border-radius: 4px 4px 0 0;
 }
 
-/* Form Kontrolleri */
-.form-control {
+.profile-tabs a.active {
     background-color: #ffffff;
-    color: #0b3d91;
-    border: 1px solid #0b3d91;
+    font-weight: bold;
 }
 
-.form-control:focus {
-    border-color: #ffd700;
-    box-shadow: 0 0 0 0.2rem rgba(255, 221, 0, 0.25);
+.profile-content {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    border-radius: 0 4px 4px 4px;
 }
 
-/* Spinner (Yükleniyor İkonu) */
-.spinner-border {
-    border-color: #0b3d91;
+/* Mobil Uyumluluk */
+@media (max-width: 768px) {
+    .alt-sorular {
+        display: none;
+    }
+}
+.action-icons .fa-bookmark.saved {
+    color: #007bff;
 }
 
-.spinner-border::after {
-    border-top-color: #ffd700;
-    border-right-color: #ffd700;
+/* Aksiyon İkonları Stil Ayarları */
+.action-icons a {
+    color: #333;
+    margin-right: 10px;
+    font-size: 0.9rem; /* Simgelerin boyutunu küçülttük */
+}
+
+.action-icons a:hover {
+    color: #000;
+}
+
+.action-icons span {
+    margin: 0 5px;
+    font-size: 0.9rem;
+}
+
+/* Yanıt Meta Bilgileri */
+.answer-meta {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.answer-meta a {
+    color: #333;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.answer-meta a:hover {
+    text-decoration: underline;
 }

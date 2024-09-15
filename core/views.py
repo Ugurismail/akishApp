@@ -1,17 +1,18 @@
-# views.py
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import Question, Answer, StartingQuestion
-from .forms import QuestionForm, AnswerForm, StartingQuestionForm, SignupForm, LoginForm
+from .models import Question, Answer, StartingQuestion, SavedItem
+from .forms import QuestionForm, AnswerForm, StartingQuestionForm, SignupForm, LoginForm, WordUsageForm
 import json
 from django.http import JsonResponse
-from django.db.models import Q
+from django.db.models import Q,Count
 from django.contrib import messages
 from django.db import transaction
 import colorsys
+import re
+
+
 
 def signup(request):
     if request.method == 'POST':
@@ -41,35 +42,105 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     return redirect('login')
+# views.py
 
 @login_required
-def profile(request):
-    return render(request, 'core/profile.html', {'user': request.user})
+def profile(request, username=None):
+    if username:
+        profile_user = get_object_or_404(User, username=username)
+    else:
+        profile_user = request.user
+
+    # Kullanıcının soruları ve yanıtlarını alıyoruz
+    questions = profile_user.questions.all()
+    answers = profile_user.answers.all()
+
+    # Kaydedilen sorular ve yanıtlar (eğer profil giriş yapan kullanıcıya aitse)
+    if profile_user == request.user:
+        saved_questions = SavedItem.objects.filter(user=profile_user, question__isnull=False).select_related('question')
+        saved_answers = SavedItem.objects.filter(user=profile_user, answer__isnull=False).select_related('answer')
+    else:
+        saved_questions = None
+        saved_answers = None
+
+    # En çok kullanılan kelimeler ve kelime arama fonksiyonu (sadece kendi profiliniz için)
+    top_words = []
+    word_usage_data = None
+    exclude_words = ''
+    search_word = ''
+    if profile_user == request.user:
+        exclude_words = request.GET.get('exclude_words', '')
+        exclude_words_list = [word.strip().lower() for word in exclude_words.split(',')] if exclude_words else []
+
+        # Kullanıcının tüm yanıt metinlerini ve soru başlıklarını birleştir
+        all_text = ' '.join(answer.answer_text.lower() for answer in answers)
+        all_text += ' ' + ' '.join(question.question_text.lower() for question in questions)
+
+        # Kelimeleri say
+        words = re.findall(r'\b\w+\b', all_text)
+        word_counts = {}
+        for word in words:
+            word = word.strip('.,!?()[]{}"\'').lower()
+            if word and word not in exclude_words_list:
+                word_counts[word] = word_counts.get(word, 0) + 1
+
+        # En çok kullanılan 10 kelime
+        top_words = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+
+        # Kelime kullanım sayısı arama
+        search_word = request.GET.get('search_word', '').lower().strip()
+        if search_word:
+            pattern = r'\b{}\b'.format(re.escape(search_word))
+            question_count = sum(len(re.findall(pattern, q.question_text.lower())) for q in questions)
+            answer_count = sum(len(re.findall(pattern, a.answer_text.lower())) for a in answers)
+            total_count = question_count + answer_count
+            word_usage_data = {
+                'word': search_word,
+                'question_count': question_count,
+                'answer_count': answer_count,
+                'total_count': total_count,
+            }
+
+    context = {
+        'profile_user': profile_user,
+        'questions': questions,
+        'answers': answers,
+        'saved_questions': saved_questions,
+        'saved_answers': saved_answers,
+        'top_words': top_words,
+        'exclude_words': exclude_words,
+        'search_word': search_word,
+        'word_usage_data': word_usage_data,
+    }
+    return render(request, 'core/profile.html', context)
 
 @login_required
 def question_detail(request, question_id):
     question = get_object_or_404(Question, id=question_id)
-    answers = question.answers.all().order_by('created_at')
-    subquestions = question.get_subquestions()
-
-    # Yanıt formu işlemleri
+    answers = Answer.objects.filter(question=question)
+    subquestions = question.subquestions.all()
+    user_has_saved_question = SavedItem.objects.filter(user=request.user, question=question).exists()
+    form = AnswerForm(request.POST or None)
     if request.method == 'POST':
-        form = AnswerForm(request.POST)
         if form.is_valid():
             answer = form.save(commit=False)
-            answer.question = question
             answer.user = request.user
+            answer.question = question
             answer.save()
             return redirect('question_detail', question_id=question.id)
-    else:
-        form = AnswerForm()
-
-    return render(request, 'core/question_detail.html', {
+    # Her bir yanıt için kullanıcının kaydedip kaydetmediğini kontrol edelim
+    for answer in answers:
+        answer.user_has_saved = SavedItem.objects.filter(user=request.user, answer=answer).exists()
+    context = {
         'question': question,
         'answers': answers,
         'subquestions': subquestions,
-        'form': form
-    })
+        'form': form,
+        'user_has_saved_question': user_has_saved_question,
+    }
+    return render(request, 'core/question_detail.html', context)
+
+
 
 @login_required
 def add_question(request):
@@ -163,31 +234,20 @@ def user_homepage(request):
 def add_subquestion(request, question_id):
     parent_question = get_object_or_404(Question, id=question_id)
     if request.method == 'POST':
-        question_form = QuestionForm(request.POST)
-        answer_form = AnswerForm(request.POST)
-        if question_form.is_valid() and answer_form.is_valid():
-            question_text = question_form.cleaned_data['question_text']
-            subquestion, created = Question.objects.get_or_create(
-                question_text=question_text,
-                defaults={'user': request.user}
-            )
-            subquestion.users.add(request.user)
+        form = QuestionForm(request.POST)
+        if form.is_valid():
+            subquestion = form.save(commit=False)
+            subquestion.user = request.user
             subquestion.save()
-            parent_question.subquestions.add(subquestion)
-            parent_question.save()
-            answer = answer_form.save(commit=False)
-            answer.question = subquestion
-            answer.user = request.user
-            answer.save()
-            return redirect('question_detail', question_id=parent_question.id)
+            subquestion.parent_questions.add(parent_question)
+            return redirect('question_detail', question_id=subquestion.id)
     else:
-        question_form = QuestionForm(exclude_parent_questions=True)
-        answer_form = AnswerForm()
-    return render(request, 'core/add_subquestion.html', {
+        form = QuestionForm()
+    context = {
+        'form': form,
         'parent_question': parent_question,
-        'question_form': question_form,
-        'answer_form': answer_form
-    })
+    }
+    return render(request, 'core/add_subquestion.html', context)
 
 @login_required
 def add_starting_question(request):
@@ -305,3 +365,83 @@ def delete_question(request, question_id):
     else:
         return render(request, 'core/confirm_delete_question.html', {'question': question})
     
+@login_required
+def vote(request):
+    if request.method == 'POST':
+        content_type = request.POST.get('content_type')
+        object_id = request.POST.get('object_id')
+        value = int(request.POST.get('value'))
+
+        if content_type == 'question':
+            question = Question.objects.get(id=object_id)
+            vote, created = Vote.objects.get_or_create(user=request.user, question=question)
+            question.votes -= vote.value  # Eski oyu çıkar
+            vote.value = value
+            vote.save()
+            question.votes += value  # Yeni oyu ekle
+            question.save()
+            return JsonResponse({'votes': question.votes})
+        elif content_type == 'answer':
+            answer = Answer.objects.get(id=object_id)
+            vote, created = Vote.objects.get_or_create(user=request.user, answer=answer)
+            answer.votes -= vote.value  # Eski oyu çıkar
+            vote.value = value
+            vote.save()
+            answer.votes += value  # Yeni oyu ekle
+            answer.save()
+            return JsonResponse({'votes': answer.votes})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def save_item(request):
+    if request.method == 'POST':
+        content_type = request.POST.get('content_type')
+        object_id = request.POST.get('object_id')
+
+        if content_type == 'question':
+            question = Question.objects.get(id=object_id)
+            saved_item, created = SavedItem.objects.get_or_create(user=request.user, question=question)
+            if not created:
+                saved_item.delete()  # Zaten kayıtlıysa kaldır
+                return JsonResponse({'status': 'removed'})
+            else:
+                return JsonResponse({'status': 'saved'})
+        elif content_type == 'answer':
+            answer = Answer.objects.get(id=object_id)
+            saved_item, created = SavedItem.objects.get_or_create(user=request.user, answer=answer)
+            if not created:
+                saved_item.delete()  # Zaten kayıtlıysa kaldır
+                return JsonResponse({'status': 'removed'})
+            else:
+                return JsonResponse({'status': 'saved'})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+def search_questions(request):
+    query = request.GET.get('q', '')
+    ajax = request.GET.get('ajax', None)
+    results = Question.objects.filter(question_text__icontains=query)
+
+    if ajax:
+        data = {
+            'results': list(results.values('id', 'question_text'))
+        }
+        return JsonResponse(data)
+    else:
+        return render(request, 'core/search_results.html', {'results': results})
+    
+
+@login_required
+def delete_saved_item(request, item_id):
+    saved_item = get_object_or_404(SavedItem, id=item_id, user=request.user)
+    if request.method == 'POST':
+        saved_item.delete()
+        return redirect('profile')
+    return render(request, 'core/confirm_delete_saved_item.html', {'saved_item': saved_item})
+
+def user_profile(request, username):
+    user = get_object_or_404(User, username=username)
+    # Kullanıcının profil bilgilerini ve içeriklerini alabilirsiniz
+    context = {
+        'profile_user': user,
+    }
+    return render(request, 'core/user_profile.html', context)
