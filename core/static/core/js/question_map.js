@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .on("drag", dragged)
                 .on("end", dragended))
             .on("click", function(event, d) {
-                window.location.href = "/question/" + d.id.replace("q", "");
+                window.location.href = "/question/" + d.question_id + "/";
             });
 
         var label = svg.append("g")

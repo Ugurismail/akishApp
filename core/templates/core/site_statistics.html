@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Site İstatistikleri</h1>
+    <ul class="list-group">
+        <li class="list-group-item">Kullanıcı Sayısı (Soru/Yanıt Giren): {{ user_count }}</li>
+        <li class="list-group-item">Toplam Soru Sayısı: {{ total_questions }}</li>
+        <li class="list-group-item">Toplam Yanıt Sayısı: {{ total_answers }}</li>
+        <li class="list-group-item">Toplam Beğeni Sayısı: {{ total_likes }}</li>
+        <li class="list-group-item">Toplam Beğenmeme Sayısı: {{ total_dislikes }}</li>
+    </ul>
+</div>
+{% endblock %}

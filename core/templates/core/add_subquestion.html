@@ -9,24 +9,33 @@
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
-                <!-- Araç Çubuğu -->
-                <div class="btn-toolbar mb-2" role="toolbar">
-                    <div class="btn-group me-2" role="group">
-                        <button type="button" class="btn btn-outline-secondary format-btn" data-format="bold">
-                            <i class="fas fa-bold"></i>
+                <!-- Soru Metni -->
+                <div class="form-group">
+                    {{ form.question_text.label_tag }}
+                    {{ form.question_text }}
+                </div>
+                <!-- Yanıt Metni -->
+                <div class="form-group mt-3">
+                    {{ form.answer_text.label_tag }}
+                    <!-- Araç Çubuğu -->
+                    <div class="btn-toolbar mb-2" role="toolbar">
+                        <div class="btn-group me-2" role="group">
+                            <button type="button" class="btn btn-outline-secondary format-btn" data-format="bold">
+                                <i class="fas fa-bold"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary format-btn" data-format="italic">
+                                <i class="fas fa-italic"></i>
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary insert-link-btn">
+                            <i class="fas fa-link"></i> Link Ekle
                         </button>
-                        <button type="button" class="btn btn-outline-secondary format-btn" data-format="italic">
-                            <i class="fas fa-italic"></i>
+                        <button type="button" class="btn btn-outline-secondary insert-reference-btn">
+                            (bkz:soru)
                         </button>
                     </div>
-                    <button type="button" class="btn btn-outline-secondary insert-link-btn">
-                        <i class="fas fa-link"></i> Link Ekle
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary insert-reference-btn">
-                        (bkz:soru)
-                    </button>
+                    {{ form.answer_text }}
                 </div>
-                {{ form.question_text }}
                 <button type="submit" class="btn btn-primary mt-2">Gönder</button>
             </form>
         </div>

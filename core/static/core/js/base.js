@@ -1,32 +1,31 @@
-// base.js
-
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
 
-    searchInput.addEventListener('keyup', function() {
-        const query = searchInput.value;
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+
         if (query.length > 1) {
             fetch(`/search/?q=${encodeURIComponent(query)}&ajax=1`)
                 .then(response => response.json())
                 .then(data => {
                     searchResults.innerHTML = '';
-                    if (data.results.length > 0) {
-                        const ul = document.createElement('ul');
-                        data.results.forEach(question => {
-                            const li = document.createElement('li');
-                            li.textContent = question.question_text;
-                            li.addEventListener('click', function() {
-                                window.location.href = `/question/${question.id}/`;
-                            });
-                            ul.appendChild(li);
-                        });
-                        searchResults.appendChild(ul);
-                    } else {
-                        searchResults.innerHTML = '<p>Sonuç bulunamadı.</p>';
-                    }
+                    data.results.forEach(result => {
+                        const item = document.createElement('a');
+                        item.href = `/question/${result.id}/`;
+                        item.classList.add('list-group-item', 'list-group-item-action');
+                        item.textContent = result.question_text;
+                        searchResults.appendChild(item);
+                    });
                 });
         } else {
+            searchResults.innerHTML = '';
+        }
+    });
+
+    // Close search results when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!searchInput.contains(event.target)) {
             searchResults.innerHTML = '';
         }
     });

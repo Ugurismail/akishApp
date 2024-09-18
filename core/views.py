@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import Question, Answer, StartingQuestion, SavedItem
+from .models import Question, Answer, StartingQuestion, SavedItem, Vote
 from .forms import QuestionForm, AnswerForm, StartingQuestionForm, SignupForm, LoginForm, WordUsageForm
 import json
 from django.http import JsonResponse
@@ -11,6 +11,8 @@ from django.contrib import messages
 from django.db import transaction
 import colorsys
 import re
+from django.utils import timezone
+from collections import defaultdict
 
 
 
@@ -42,10 +44,10 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     return redirect('login')
-# views.py
 
 @login_required
 def profile(request, username=None):
+
     if username:
         profile_user = get_object_or_404(User, username=username)
     else:
@@ -112,6 +114,7 @@ def profile(request, username=None):
         'search_word': search_word,
         'word_usage_data': word_usage_data,
     }
+    
     return render(request, 'core/profile.html', context)
 
 @login_required
@@ -139,8 +142,6 @@ def question_detail(request, question_id):
         'user_has_saved_question': user_has_saved_question,
     }
     return render(request, 'core/question_detail.html', context)
-
-
 
 @login_required
 def add_question(request):
@@ -186,41 +187,71 @@ def get_user_color(user_id):
     hex_color = '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
     return hex_color
 
+
 @login_required
 def question_map(request):
     questions = Question.objects.all()
-    nodes = []
-    node_ids = set()
+    nodes = {}
+    links = []
+    question_text_to_ids = defaultdict(list)
+
+    # Build nodes dictionary keyed by question_text
     for question in questions:
-        if question.id not in node_ids:
+        key = question.question_text
+        question_text_to_ids[key].append(question.id)
+        if key not in nodes:
             associated_users = list(question.users.all())
             user_ids = [user.id for user in associated_users]
             node = {
-                "id": f"q{question.id}",
+                "id": f"q{hash(key)}",  # Unique ID based on question_text
                 "label": question.question_text,
                 "users": user_ids,
                 "size": 20 + 5 * (len(user_ids) - 1),
-                "color": ''
+                "color": '',
+                "question_id": question.id,  # Store a valid question ID
+                "question_ids": [question.id],  # List of question IDs with same text
             }
+            # Assign color based on user IDs
             if len(user_ids) == 1:
                 node["color"] = get_user_color(user_ids[0])
             elif len(user_ids) > 1:
-                node["color"] = '#CCCCCC'
+                node["color"] = '#CCCCCC'  # Grey for multiple users
             else:
-                node["color"] = '#000000'
-            nodes.append(node)
-            node_ids.add(question.id)
+                node["color"] = '#000000'  # Black if no user
+            nodes[key] = node
+        else:
+            # Merge user IDs and update size
+            existing_node = nodes[key]
+            new_user_ids = [user.id for user in question.users.all()]
+            combined_user_ids = list(set(existing_node["users"] + new_user_ids))
+            existing_node["users"] = combined_user_ids
+            existing_node["size"] = 20 + 5 * (len(combined_user_ids) - 1)
+            existing_node["question_ids"].append(question.id)
+            # Update color
+            if len(combined_user_ids) == 1:
+                existing_node["color"] = get_user_color(combined_user_ids[0])
+            elif len(combined_user_ids) > 1:
+                existing_node["color"] = '#CCCCCC'
+            else:
+                existing_node["color"] = '#000000'
 
-    links = []
+    # Build links using question_text as keys
+    link_set = set()
     for question in questions:
+        source_key = question.question_text
         for subquestion in question.subquestions.all():
-            links.append({
-                "source": f"q{question.id}",
-                "target": f"q{subquestion.id}"
-            })
+            target_key = subquestion.question_text
+            if target_key in nodes:
+                link_id = (nodes[source_key]["id"], nodes[target_key]["id"])
+                if link_id not in link_set:
+                    links.append({
+                        "source": nodes[source_key]["id"],
+                        "target": nodes[target_key]["id"]
+                    })
+                    link_set.add(link_id)
 
     question_nodes = {
-        "nodes": nodes,
+        "nodes": list(nodes.values()),
         "links": links
     }
     return render(request, 'core/question_map.html', {'question_nodes': json.dumps(question_nodes)})
@@ -240,6 +271,14 @@ def add_subquestion(request, question_id):
             subquestion.user = request.user
             subquestion.save()
             subquestion.parent_questions.add(parent_question)
+            # Yanıtı kaydet
+            answer_text = form.cleaned_data.get('answer_text', '')
+            if answer_text:
+                Answer.objects.create(
+                    question=subquestion,
+                    user=request.user,
+                    answer_text=answer_text
+                )
             return redirect('question_detail', question_id=subquestion.id)
     else:
         form = QuestionForm()
@@ -297,24 +336,39 @@ def map_data(request):
     current_user = request.user
 
     if filter_type == 'me':
-        questions = Question.objects.filter(users=current_user)
+        user = current_user
     elif user_id:
-        questions = Question.objects.filter(users__id=user_id)
+        user = User.objects.get(id=user_id)
+    else:
+        user = None
+
+    if user:
+        # Retrieve all questions where the user is the creator or associated
+        questions = Question.objects.filter(
+            Q(user=user) | Q(users=user) | Q(subquestions__user=user)
+        ).distinct()
     else:
         questions = Question.objects.all()
 
-    nodes = []
-    node_ids = set()
+    nodes = {}
+    links = []
+    question_text_to_ids = defaultdict(list)
+
+    # Node creation and merging logic (same as previously provided)
     for question in questions:
-        if question.id not in node_ids:
+        key = question.question_text
+        question_text_to_ids[key].append(question.id)
+        if key not in nodes:
             associated_users = list(question.users.all())
             user_ids = [user.id for user in associated_users]
             node = {
-                "id": f"q{question.id}",
+                "id": f"q{hash(key)}",
                 "label": question.question_text,
                 "users": user_ids,
                 "size": 20 + 5 * (len(user_ids) - 1),
-                "color": ''
+                "color": '',
+                "question_id": question.id,
+                "question_ids": [question.id],
             }
             if len(user_ids) == 1:
                 node["color"] = get_user_color(user_ids[0])
@@ -322,19 +376,37 @@ def map_data(request):
                 node["color"] = '#CCCCCC'
             else:
                 node["color"] = '#000000'
-            nodes.append(node)
-            node_ids.add(question.id)
+            nodes[key] = node
+        else:
+            existing_node = nodes[key]
+            new_user_ids = [user.id for user in question.users.all()]
+            combined_user_ids = list(set(existing_node["users"] + new_user_ids))
+            existing_node["users"] = combined_user_ids
+            existing_node["size"] = 20 + 5 * (len(combined_user_ids) - 1)
+            existing_node["question_ids"].append(question.id)
+            if len(combined_user_ids) == 1:
+                existing_node["color"] = get_user_color(combined_user_ids[0])
+            elif len(combined_user_ids) > 1:
+                existing_node["color"] = '#CCCCCC'
+            else:
+                existing_node["color"] = '#000000'
 
-    links = []
+    # Build links
+    link_set = set()
     for question in questions:
+        source_key = question.question_text
         for subquestion in question.subquestions.all():
-            if subquestion in questions:
-                links.append({
-                    "source": f"q{question.id}",
-                    "target": f"q{subquestion.id}"
-                })
+            target_key = subquestion.question_text
+            if target_key in nodes:
+                link_id = (nodes[source_key]["id"], nodes[target_key]["id"])
+                if link_id not in link_set:
+                    links.append({
+                        "source": nodes[source_key]["id"],
+                        "target": nodes[target_key]["id"]
+                    })
+                    link_set.add(link_id)
 
-    return JsonResponse({'nodes': nodes, 'links': links})
+    return JsonResponse({'nodes': list(nodes.values()), 'links': links})
 
 def delete_question_and_subquestions(question):
     subquestions = question.subquestions.all()
@@ -342,52 +414,58 @@ def delete_question_and_subquestions(question):
         delete_question_and_subquestions(sub)
     question.delete()
 
+
 @login_required
 def delete_question(request, question_id):
     question = get_object_or_404(Question, id=question_id)
 
     if request.method == 'POST':
-        if request.user in question.users.all():
+        if request.user == question.user:
             with transaction.atomic():
-                question.users.remove(request.user)
-                question.save()
+                # Delete all answers associated with the question by the user
                 Answer.objects.filter(question=question, user=request.user).delete()
+                # Remove the user from the question's users
+                question.users.remove(request.user)
                 if question.users.count() == 0:
-                    if question.subquestions.exists():
-                        messages.warning(request, 'Bu soruyu silerseniz tüm alt soruları da silinecek.')
+                    # If no users are associated, delete the question and its subquestions
                     delete_question_and_subquestions(question)
                     messages.success(request, 'Soru ve alt soruları başarıyla silindi.')
                 else:
                     messages.success(request, 'Soru sizin için silindi.')
+            return redirect('user_homepage')
         else:
             messages.error(request, 'Bu soruyu silme yetkiniz yok.')
-        return redirect('user_homepage')
+            return redirect('question_detail', question_id=question.id)
     else:
         return render(request, 'core/confirm_delete_question.html', {'question': question})
-    
+
+
 @login_required
 def vote(request):
     if request.method == 'POST':
         content_type = request.POST.get('content_type')
-        object_id = request.POST.get('object_id')
+        object_id = int(request.POST.get('object_id'))
         value = int(request.POST.get('value'))
 
         if content_type == 'question':
-            question = Question.objects.get(id=object_id)
+            question = get_object_or_404(Question, id=object_id)
             vote, created = Vote.objects.get_or_create(user=request.user, question=question)
-            question.votes -= vote.value  # Eski oyu çıkar
+            if not created:
+                # If the vote already exists, adjust the vote count
+                question.votes -= vote.value
             vote.value = value
             vote.save()
-            question.votes += value  # Yeni oyu ekle
+            question.votes += value
             question.save()
             return JsonResponse({'votes': question.votes})
         elif content_type == 'answer':
-            answer = Answer.objects.get(id=object_id)
+            answer = get_object_or_404(Answer, id=object_id)
             vote, created = Vote.objects.get_or_create(user=request.user, answer=answer)
-            answer.votes -= vote.value  # Eski oyu çıkar
+            if not created:
+                answer.votes -= vote.value
             vote.value = value
             vote.save()
-            answer.votes += value  # Yeni oyu ekle
+            answer.votes += value
             answer.save()
             return JsonResponse({'votes': answer.votes})
     return JsonResponse({'error': 'Invalid request'}, status=400)
@@ -429,6 +507,18 @@ def search_questions(request):
     else:
         return render(request, 'core/search_results.html', {'results': results})
     
+@login_required
+def user_homepage(request):
+    starting_questions = StartingQuestion.objects.filter(user=request.user)
+    today = timezone.now().date()
+    todays_questions = Question.objects.filter(created_at__date=today)
+    return render(request, 'core/user_homepage.html', {
+        'starting_questions': starting_questions,
+        'todays_questions': todays_questions,
+    })
+
+def about(request):
+    return render(request, 'core/about.html')
 
 @login_required
 def delete_saved_item(request, item_id):
@@ -445,3 +535,36 @@ def user_profile(request, username):
         'profile_user': user,
     }
     return render(request, 'core/user_profile.html', context)
+
+def site_statistics(request):
+    user_count = User.objects.filter(Q(questions__isnull=False) | Q(answers__isnull=False)).distinct().count()
+    total_questions = Question.objects.count()
+    total_answers = Answer.objects.count()
+    total_likes = Vote.objects.filter(value=1).count()
+    total_dislikes = Vote.objects.filter(value=-1).count()
+
+    context = {
+        'user_count': user_count,
+        'total_questions': total_questions,
+        'total_answers': total_answers,
+        'total_likes': total_likes,
+        'total_dislikes': total_dislikes,
+    }
+    return render(request, 'core/site_statistics.html', context)
+
+@login_required
+def delete_answer(request, answer_id):
+    answer = get_object_or_404(Answer, id=answer_id)
+
+    if request.method == 'POST':
+        if request.user == answer.user:
+            with transaction.atomic():
+                # Delete the answer
+                answer.delete()
+                messages.success(request, 'Yanıt başarıyla silindi.')
+            return redirect('question_detail', question_id=answer.question.id)
+        else:
+            messages.error(request, 'Bu yanıtı silme yetkiniz yok.')
+            return redirect('question_detail', question_id=answer.question.id)
+    else:
+        return render(request, 'core/confirm_delete_answer.html', {'answer': answer})

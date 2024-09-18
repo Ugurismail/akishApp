@@ -1,12 +1,37 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-<h2>Başlangıç Sorularınız</h2>
-<ul>
-    {% for starting_question in starting_questions %}
-        <li><a href="{% url 'question_detail' starting_question.question.id %}">{{ starting_question.question.question_text }}</a></li>
-    {% endfor %}
-</ul>
-
-<a href="{% url 'add_starting_question' %}" class="btn btn-primary">Başlangıç Sorusu Ekle</a>
+<div class="row">
+    <!-- Sol Sütun: Bugünün Soruları -->
+    <div class="col-md-8">
+        <h2>Bugün Girilen Sorular</h2>
+        {% if todays_questions %}
+            <ul>
+                {% for question in todays_questions %}
+                    <li>
+                        <a href="{% url 'question_detail' question.id %}">
+                            {{ question.question_text }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Bugün bu sitede yeni soru sorulmamıştır.</p>
+        {% endif %}
+    </div>
+    <!-- Sağ Sütun: Başlangıç Sorularınız -->
+    <div class="col-md-4">
+        <h2>Başlangıç Sorularınız</h2>
+        <ul>
+            {% for starting_question in starting_questions %}
+                <li>
+                    <a href="{% url 'question_detail' starting_question.question.id %}">
+                        {{ starting_question.question.question_text }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'add_starting_question' %}" class="btn btn-primary">Başlangıç Sorusu Ekle</a>
+    </div>
+</div>
 {% endblock %}

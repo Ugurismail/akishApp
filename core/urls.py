@@ -22,4 +22,8 @@ urlpatterns = [
     path('delete-saved-item/<int:item_id>/', views.delete_saved_item, name='delete_saved_item'),
     path('user/<str:username>/', views.user_profile, name='user_profile'),
     path('profile/<str:username>/', views.profile, name='profile_with_username'),
+    path('about/', views.about, name='about'),
+    path('statistics/', views.site_statistics, name='site_statistics'),
+    path('answer/<int:answer_id>/delete/', views.delete_answer, name='delete_answer'),
+
 ]
