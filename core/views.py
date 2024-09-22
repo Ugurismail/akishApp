@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from .models import Question, Answer, StartingQuestion, SavedItem, Vote
-from .forms import QuestionForm, AnswerForm, StartingQuestionForm, SignupForm, LoginForm, WordUsageForm
+from .forms import QuestionForm, AnswerForm, StartingQuestionForm, SignupForm, LoginForm, WordUsageForm,InvitationForm
 import json
 from django.http import JsonResponse
 from django.db.models import Q,Count
@@ -15,19 +15,40 @@ from django.utils import timezone
 from collections import defaultdict
 from .models import Message
 from .forms import MessageForm
-
-
-
+from .models import Invitation, UserProfile
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
 
 def signup(request):
     if request.method == 'POST':
         form = SignupForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
+            with transaction.atomic():
+                user = form.save(commit=False)
+                user.email = form.cleaned_data['email']
+                user.save()
+                # Kullanıcının profilini oluştur
+                UserProfile.objects.get_or_create(user=user)
+                # Davetiyeyi işle
+                code = form.cleaned_data['invitation_code']
+                try:
+                    invitation = Invitation.objects.get(code=code, is_accepted=False)
+                    invitation.is_accepted = True
+                    invitation.accepted_by = user
+                    invitation.accepted_at = timezone.now()
+                    invitation.save()
+                    # Davet hakkını kullanıcıya ekle
+                    profile = user.userprofile
+                    profile.invitation_quota += invitation.quota_granted
+                    profile.save()
+                except Invitation.DoesNotExist:
+                    pass
+                login(request, user)
             return redirect('user_homepage')
     else:
-        form = SignupForm()
+        invitation_code = request.GET.get('invitation_code', None)
+        form = SignupForm(initial={'invitation_code': invitation_code})
     return render(request, 'core/signup.html', {'form': form})
 
 def user_login(request):
@@ -695,3 +716,55 @@ def view_message(request, message_id):
 def get_unread_message_count(request):
     count = Message.objects.filter(recipient=request.user, is_read=False).count()
     return JsonResponse({'unread_count': count})
+
+@login_required
+def send_invitation(request):
+    user_profile = request.user.userprofile
+    if request.method == 'POST':
+        form = InvitationForm(request.POST, user_quota=user_profile.invitation_quota)
+        if form.is_valid():
+            with transaction.atomic():
+                invitation = form.save(commit=False)
+                invitation.sender = request.user
+                invitation.save()
+                # Kullanıcının davet hakkını düşür
+                user_profile.invitation_quota -= invitation.quota_granted
+                user_profile.save()
+                # Davetiyeyi e-posta ile gönder
+                send_invitation_email(invitation)
+            messages.success(request, 'Davet gönderildi.')
+            return redirect('profile')
+    else:
+        form = InvitationForm(user_quota=user_profile.invitation_quota)
+    return render(request, 'core/send_invitation.html', {'form': form})
+
+def send_invitation_email(invitation):
+    subject = 'Sitemize Davetlisiniz!'
+    message = f"""Merhaba,
+
+{invitation.sender.username} sizi sitemize davet etti!
+
+Davet kodunuz: {invitation.code}
+
+Kayıt olmak için şu linki kullanabilirsiniz:
+http://your-domain.com/signup/?invitation_code={invitation.code}
+
+İyi günler!"""
+    recipient_list = [invitation.recipient_email]
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
+
+@staff_member_required
+def grant_invitation_quota(request):
+    if request.method == 'POST':
+        form = GrantQuotaForm(request.POST)
+        if form.is_valid():
+            user = form.cleaned_data['user']
+            quota = form.cleaned_data['quota']
+            profile = user.userprofile
+            profile.invitation_quota += quota
+            profile.save()
+            messages.success(request, f"{user.username} kullanıcısına {quota} davet hakkı verildi.")
+            return redirect('profile', username=user.username)
+    else:
+        form = GrantQuotaForm()
+    return render(request, 'core/grant_invitation_quota.html', {'form': form})

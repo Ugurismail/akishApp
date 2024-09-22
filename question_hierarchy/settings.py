@@ -124,6 +124,12 @@ USE_L10N = True
 
 USE_TZ = True
 
+# settings.py
+
+# E-posta backend'i (konsola yazdırır)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 

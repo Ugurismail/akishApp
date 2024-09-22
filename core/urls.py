@@ -32,4 +32,6 @@ urlpatterns = [
     path('messages/compose/', views.compose_message, name='compose_message_no_recipient'),
     path('messages/<int:message_id>/', views.view_message, name='view_message'),
     path('ajax/get_unread_message_count/', views.get_unread_message_count, name='get_unread_message_count'),
+    path('send-invitation/', views.send_invitation, name='send_invitation'),
+    path('grant-invitation-quota/', views.grant_invitation_quota, name='grant_invitation_quota'),
 ]

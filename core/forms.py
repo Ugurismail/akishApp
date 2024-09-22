@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from .models import Question, Answer, StartingQuestion
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import Message
+from .models import Invitation
 
 
 
@@ -108,3 +109,46 @@ class MessageForm(forms.ModelForm):
     class Meta:
         model = Message
         fields = ['recipient', 'subject', 'body']
+
+class SignupForm(UserCreationForm):
+    username = forms.CharField(label='Kullanıcı Adı', max_length=30)
+    email = forms.EmailField(label='Email')
+    password1 = forms.CharField(label='Şifre', widget=forms.PasswordInput)
+    password2 = forms.CharField(label='Şifre Tekrar', widget=forms.PasswordInput)
+    invitation_code = forms.UUIDField(label='Davet Kodu')
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password1', 'password2', 'invitation_code')
+
+    def clean_invitation_code(self):
+        code = self.cleaned_data.get('invitation_code')
+        try:
+            invitation = Invitation.objects.get(code=code, is_accepted=False)
+        except Invitation.DoesNotExist:
+            raise forms.ValidationError("Geçersiz veya kullanılmış davet kodu.")
+        return code
+
+
+class InvitationForm(forms.ModelForm):
+    recipient_email = forms.EmailField(label='Alıcının E-postası')
+    quota_granted = forms.IntegerField(label='Davet Hakkı Sayısı', min_value=1)
+
+    class Meta:
+        model = Invitation
+        fields = ['recipient_email', 'quota_granted']
+
+    def __init__(self, *args, **kwargs):
+        self.user_quota = kwargs.pop('user_quota')
+        super().__init__(*args, **kwargs)
+
+    def clean_quota_granted(self):
+        quota = self.cleaned_data.get('quota_granted')
+        if self.user_quota != float('inf') and quota > self.user_quota:
+            raise forms.ValidationError(f"En fazla {self.user_quota} davet hakkı verebilirsiniz.")
+        return quota
+
+
+class GrantQuotaForm(forms.Form):
+    user = forms.ModelChoiceField(queryset=User.objects.all(), label='Kullanıcı')
+    quota = forms.IntegerField(label='Davet Hakkı Sayısı', min_value=1)
