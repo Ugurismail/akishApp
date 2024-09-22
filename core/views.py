@@ -120,7 +120,8 @@ def profile(request, username=None):
 @login_required
 def question_detail(request, question_id):
     question = get_object_or_404(Question, id=question_id)
-    answers = Answer.objects.filter(question=question)
+    # Order answers by created_at
+    answers = Answer.objects.filter(question=question).order_by('created_at')
     subquestions = question.subquestions.all()
     user_has_saved_question = SavedItem.objects.filter(user=request.user, question=question).exists()
     form = AnswerForm(request.POST or None)
@@ -130,18 +131,23 @@ def question_detail(request, question_id):
             answer.user = request.user
             answer.question = question
             answer.save()
+            messages.success(request, 'Yanıtınız başarıyla eklendi.')
             return redirect('question_detail', question_id=question.id)
-    # Her bir yanıt için kullanıcının kaydedip kaydetmediğini kontrol edelim
+    # Check if the user has saved each answer
     for answer in answers:
         answer.user_has_saved = SavedItem.objects.filter(user=request.user, answer=answer).exists()
+    # Collect saved answer IDs for the template
+    saved_answer_ids = SavedItem.objects.filter(user=request.user, answer__in=answers).values_list('answer__id', flat=True)
     context = {
         'question': question,
         'answers': answers,
         'subquestions': subquestions,
         'form': form,
         'user_has_saved_question': user_has_saved_question,
+        'saved_answer_ids': saved_answer_ids,
     }
     return render(request, 'core/question_detail.html', context)
+
 
 @login_required
 def add_question(request):
@@ -267,18 +273,22 @@ def add_subquestion(request, question_id):
     if request.method == 'POST':
         form = QuestionForm(request.POST)
         if form.is_valid():
-            subquestion = form.save(commit=False)
-            subquestion.user = request.user
-            subquestion.save()
-            subquestion.parent_questions.add(parent_question)
-            # Yanıtı kaydet
+            subquestion_text = form.cleaned_data['question_text']
             answer_text = form.cleaned_data.get('answer_text', '')
-            if answer_text:
-                Answer.objects.create(
-                    question=subquestion,
-                    user=request.user,
-                    answer_text=answer_text
-                )
+            # Yeni veya mevcut alt soruyu oluştururken 'user' bilgisini ekliyoruz
+            subquestion, created = Question.objects.get_or_create(
+                question_text=subquestion_text,
+                defaults={'user': request.user}
+            )
+            subquestion.users.add(request.user)
+            parent_question.subquestions.add(subquestion)
+            # Yanıtı kaydet
+            Answer.objects.create(
+                question=subquestion,
+                user=request.user,
+                answer_text=answer_text
+            )
+            messages.success(request, 'Alt soru başarıyla eklendi.')
             return redirect('question_detail', question_id=subquestion.id)
     else:
         form = QuestionForm()
@@ -287,6 +297,7 @@ def add_subquestion(request, question_id):
         'parent_question': parent_question,
     }
     return render(request, 'core/add_subquestion.html', context)
+
 
 @login_required
 def add_starting_question(request):

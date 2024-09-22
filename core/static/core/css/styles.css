@@ -76,6 +76,10 @@ body {
 .navbar .position-relative {
     position: relative;
 }
+.answer-text {
+    text-align: justify;
+}
+
 
 /* Genel Link Stilini Sınırlama */
 

@@ -18,11 +18,11 @@
                     <div class="mt-2">
                         <!-- Oy Verme Butonları -->
                         <a href="#" class="vote-btn me-2" data-content-type="question" data-object-id="{{ question.id }}" data-value="1" title="Beğen">
-                            <i class="fas fa-arrow-up"></i>
+                            <i class="fas fa-caret-up"></i>
                         </a>
                         <span id="question-votes">{{ question.votes }}</span>
                         <a href="#" class="vote-btn ms-2" data-content-type="question" data-object-id="{{ question.id }}" data-value="-1" title="Beğenme">
-                            <i class="fas fa-arrow-down"></i>
+                            <i class="fas fa-caret-down"></i>
                         </a>
                         <!-- Kaydetme Butonu -->
                         <a href="#" class="save-btn ms-3" data-content-type="question" data-object-id="{{ question.id }}" title="Kaydet">
@@ -37,11 +37,21 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <!-- Yanıt Metni -->
+                    {% if answer.answer_text|length > 500 %}
+                    <!-- Truncated Answer -->
+                    <p class="answer-text" id="answer-summary-{{ answer.id }}">{{ answer.answer_text|slice:":500" }}...</p>
+                    <!-- Full Answer (Initially Hidden) -->
+                    <p class="answer-text" id="answer-full-{{ answer.id }}" style="display: none;">{{ answer.answer_text|safe }}</p>
+                    <!-- Read More Link -->
+                    <a href="#" class="read-more" data-answer-id="{{ answer.id }}">Tamamını oku</a>
+                {% else %}
+                    <!-- Short Answer -->
+                    <p class="answer-text">{{ answer.answer_text|safe }}</p>
+                {% endif %}
                     <p>{{ answer.answer_text|safe }}</p>
                     <!-- Yanıt Detayları -->
                     <small class="text-muted">
-                        <i class="fas fa-user"></i> {{ answer.user.username }}
-                        | <i class="fas fa-clock"></i> {{ answer.created_at|date:"Y-m-d H:i" }}
+                        <i class=""></i> {{ answer.created_at|date:"Y-m-d H:i" }}
                         {% if answer.updated_at %}
                             ~
                             {% if answer.updated_at|date:"Y-m-d" != answer.created_at|date:"Y-m-d" %}
@@ -49,17 +59,18 @@
                             {% else %}
                                 {{ answer.updated_at|date:"H:i" }}
                             {% endif %}
-                        {% endif %}
+                        {% endif %}| 
+                        <i class=""></i> {{ answer.user.username }}
                     </small>
                     <!-- Yanıta Oy Verme ve Kaydetme -->
                     <div class="mt-2">
                         <!-- Oy Verme Butonları -->
                         <a href="#" class="vote-btn me-2" data-content-type="answer" data-object-id="{{ answer.id }}" data-value="1" title="Beğen">
-                            <i class="fas fa-arrow-up"></i>
+                            <i class="fas fa-caret-up"></i>
                         </a>
                         <span id="answer-votes-{{ answer.id }}">{{ answer.votes }}</span>
                         <a href="#" class="vote-btn ms-2" data-content-type="answer" data-object-id="{{ answer.id }}" data-value="-1" title="Beğenme">
-                            <i class="fas fa-arrow-down"></i>
+                            <i class="fas fa-caret-down"></i>
                         </a>
                         <!-- Kaydetme Butonu -->
                         <a href="#" class="save-btn ms-3" data-content-type="answer" data-object-id="{{ answer.id }}" title="Kaydet">
@@ -159,5 +170,27 @@
 {% block extra_js %}
 <script src="{% static 'core/js/answer_form.js' %}"></script>
 <script src="{% static 'core/js/vote_save.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const readMoreLinks = document.querySelectorAll('.read-more');
+        readMoreLinks.forEach(function(link) {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const answerId = this.getAttribute('data-answer-id');
+                const summary = document.getElementById('answer-summary-' + answerId);
+                const fullText = document.getElementById('answer-full-' + answerId);
+                if (summary.style.display === 'none') {
+                    summary.style.display = 'block';
+                    fullText.style.display = 'none';
+                    this.textContent = 'Tamamını oku';
+                } else {
+                    summary.style.display = 'none';
+                    fullText.style.display = 'block';
+                    this.textContent = 'Daha az göster';
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
-Lorem ipsum dolor sit amet, consectetur adipisicing elit. Vel, aperiam ratione, ex pariatur facere aliquid recusandae at cumque impedit qui quis amet! Voluptatem excepturi quas corrupti? Culpa totam odio quos, perspiciatis harum cumque dignissimos. Veniam quod odit iure ipsa animi unde sequi, alias eveniet, dolorem doloremque repellendus optio soluta ad aperiam cum? Modi quae possimus magnam ut magni accusamus ab laboriosam quis saepe est incidunt, consectetur sunt. Voluptate obcaecati optio laborum rerum, enim veritatis earum sapiente esse inventore quia deserunt quaerat dolor consequatur explicabo voluptas voluptatem corrupti, blanditiis quisquam modi atque reiciendis a corporis hic. Voluptate voluptatum eos voluptates dolore quis hic adipisci a deleniti nobis est provident autem quibusdam obcaecati libero, recusandae fugit incidunt architecto quaerat molestias laboriosam distinctio ea impedit. Culpa possimus, earum ducimus recusandae odio iure at vel! Quas sequi nemo, corporis, hic sint pariatur facere sed explicabo, quasi autem nostrum consequatur. Numquam perspiciatis perferendis inventore. Similique nisi saepe laboriosam sed ullam autem laudantium architecto, atque repellendus impedit, doloribus rem tempora aspernatur magnam hic omnis sunt harum. Voluptatem minima ea molestiae atque quibusdam eos vel ipsam eligendi amet voluptas vitae officia laboriosam in aliquam, deserunt reprehenderit earum corporis, pariatur blanditiis natus error at sint numquam aut? Maxime?
+
