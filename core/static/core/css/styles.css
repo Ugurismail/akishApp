@@ -94,3 +94,11 @@ body {
 .icon-black-white {
     color: black; /* Siyah renk */
 }
+.nav-link {
+    position: relative;
+}
+
+.nav-link .badge {
+    font-size: 0.75em;
+    /* Diğer stil ayarları */
+}

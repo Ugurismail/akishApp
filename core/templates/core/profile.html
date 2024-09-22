@@ -3,6 +3,9 @@
 {% block content %}
 <div class="container mt-4">
     <h1>{{ profile_user.username }}'ın Profili</h1>
+    {% if request.user != profile_user %}
+        <a href="{% url 'compose_message' profile_user.username %}" class="btn btn-primary">Mesaj Gönder</a>
+    {% endif %}
 
     {% if profile_user == request.user %}
         <!-- Tabs -->

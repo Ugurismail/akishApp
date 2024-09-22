@@ -1,0 +1,15 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ message.subject }}</h2>
+    <p><strong>Kimden:</strong> {{ message.sender.username }}</p>
+    <p><strong>Kime:</strong> {{ message.recipient.username }}</p>
+    <p><strong>Tarih:</strong> {{ message.timestamp|date:"Y-m-d H:i" }}</p>
+    <hr>
+    <p>{{ message.body }}</p>
+    {% if message.recipient == user %}
+        <a href="{% url 'compose_message' message.sender.username %}" class="btn btn-secondary">Cevapla</a>
+    {% endif %}
+</div>
+{% endblock %}

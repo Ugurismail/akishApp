@@ -76,6 +76,16 @@
                     <!-- Kullanıcı Giriş/Çıkış -->
                     {% if user.is_authenticated %}
                     <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'inbox' %}">
+                            Mesaj
+                            {% if unread_message_count > 0 %}
+                                <i class="fas fa-envelope text-danger"></i>
+                            {% else %}
+                                <i class="fas fa-envelope"></i>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'profile' %}">Profil</a>
                     </li>
                     <li class="nav-item">
@@ -118,6 +128,29 @@
                     navbar.classList.remove('navbar-transparent');
                 }
             });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            function updateUnreadMessageCount() {
+                fetch('{% url "get_unread_message_count" %}')
+                    .then(response => response.json())
+                    .then(data => {
+                        const count = data.unread_count;
+                        const badge = document.getElementById('unread-message-badge');
+                        if (count > 0) {
+                            badge.textContent = count;
+                            badge.style.display = 'inline';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+    
+            // Sayfa yüklendiğinde ve her 30 saniyede bir kontrol et
+            updateUnreadMessageCount();
+            setInterval(updateUnreadMessageCount, 30000); // 30 saniye
         });
     </script>
 </body>

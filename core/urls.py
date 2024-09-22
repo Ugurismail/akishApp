@@ -26,4 +26,10 @@ urlpatterns = [
     path('statistics/', views.site_statistics, name='site_statistics'),
     path('answer/<int:answer_id>/delete/', views.delete_answer, name='delete_answer'),
     path('profile/<str:username>/', views.user_profile, name='profile'),
+    path('messages/', views.inbox, name='inbox'),
+    path('messages/sent/', views.sent_messages, name='sent_messages'),
+    path('messages/compose/<str:username>/', views.compose_message, name='compose_message'),
+    path('messages/compose/', views.compose_message, name='compose_message_no_recipient'),
+    path('messages/<int:message_id>/', views.view_message, name='view_message'),
+    path('ajax/get_unread_message_count/', views.get_unread_message_count, name='get_unread_message_count'),
 ]

@@ -1,0 +1,33 @@
+
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Gelen Kutusu</h2>
+    <a href="{% url 'compose_message_no_recipient' %}" class="btn btn-primary mb-3">Yeni Mesaj</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Kimden</th>
+                <th>Konu</th>
+                <th>Tarih</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for message in messages %}
+                <tr class="{% if not message.is_read %}table-info{% endif %}">
+                    <td>{{ message.sender.username }}</td>
+                    <td>
+                        <a href="{% url 'view_message' message.id %}">{{ message.subject }}</a>
+                    </td>
+                    <td>{{ message.timestamp|date:"Y-m-d H:i" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">Gelen mesaj yok.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

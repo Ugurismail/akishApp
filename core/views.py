@@ -13,6 +13,8 @@ import colorsys
 import re
 from django.utils import timezone
 from collections import defaultdict
+from .models import Message
+from .forms import MessageForm
 
 
 
@@ -117,8 +119,6 @@ def profile(request, username=None):
     }
     
     return render(request, 'core/profile.html', context)
-
-
 
 @login_required
 def question_detail(request, question_id):
@@ -442,7 +442,6 @@ def delete_question_and_subquestions(question):
         delete_question_and_subquestions(sub)
     question.delete()
 
-
 @login_required
 def delete_question(request, question_id):
     question = get_object_or_404(Question, id=question_id)
@@ -466,8 +465,6 @@ def delete_question(request, question_id):
             return redirect('question_detail', question_id=question.id)
     else:
         return render(request, 'core/confirm_delete_question.html', {'question': question})
-
-from django.db import transaction
 
 @login_required
 def vote(request):
@@ -654,3 +651,47 @@ def user_profile(request, username):
     questions = Question.objects.filter(user=user)
     answers = Answer.objects.filter(user=user)
     return render(request, 'core/user_profile.html', {'profile_user': user, 'questions': questions, 'answers': answers})
+
+@login_required
+def inbox(request):
+    messages = Message.objects.filter(recipient=request.user).order_by('-timestamp')
+    return render(request, 'core/inbox.html', {'messages': messages})
+
+@login_required
+def sent_messages(request):
+    messages = Message.objects.filter(sender=request.user).order_by('-timestamp')
+    return render(request, 'core/sent_messages.html', {'messages': messages})
+
+@login_required
+def compose_message(request, username=None):
+    if username:
+        recipient = get_object_or_404(User, username=username)
+    else:
+        recipient = None
+
+    if request.method == 'POST':
+        form = MessageForm(request.POST)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.sender = request.user
+            message.save()
+            return redirect('inbox')
+    else:
+        form = MessageForm(initial={'recipient': recipient})
+
+    return render(request, 'core/compose_message.html', {'form': form})
+
+@login_required
+def view_message(request, message_id):
+    message = get_object_or_404(Message, id=message_id)
+    if message.recipient != request.user and message.sender != request.user:
+        return redirect('inbox')
+    if message.recipient == request.user:
+        message.is_read = True
+        message.save()
+    return render(request, 'core/view_message.html', {'message': message})
+
+@login_required
+def get_unread_message_count(request):
+    count = Message.objects.filter(recipient=request.user, is_read=False).count()
+    return JsonResponse({'unread_count': count})

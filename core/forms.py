@@ -1,9 +1,8 @@
-# forms.py
-
 from django import forms
 from django.contrib.auth.models import User
 from .models import Question, Answer, StartingQuestion
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from .models import Message
 
 
 
@@ -89,3 +88,23 @@ class SignupForm(UserCreationForm):
 
 class WordUsageForm(forms.Form):
     word = forms.CharField(label='Kelime', max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Aramak istediğiniz kelime'}))
+
+class MessageForm(forms.ModelForm):
+    recipient = forms.ModelChoiceField(
+        queryset=User.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Alıcı'
+    )
+    subject = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label='Konu'
+    )
+    body = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control'}),
+        label='Mesaj'
+    )
+
+    class Meta:
+        model = Message
+        fields = ['recipient', 'subject', 'body']
