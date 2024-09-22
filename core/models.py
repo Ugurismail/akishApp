@@ -14,7 +14,8 @@ class Question(models.Model):
     parent_questions = models.ManyToManyField('self', blank=True, related_name='subquestions', symmetrical=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='questions')
     users = models.ManyToManyField(User, related_name='associated_questions', blank=True)
-    votes = models.IntegerField(default=0)      
+    upvotes = models.IntegerField(default=0)
+    downvotes = models.IntegerField(default=0)    
     def __str__(self):
         return self.question_text
 
@@ -41,7 +42,8 @@ class Answer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='answers')
-    votes = models.IntegerField(default=0)
+    upvotes = models.IntegerField(default=0)
+    downvotes = models.IntegerField(default=0)
     ALLOWED_TAGS = ['a', 'p', 'br', 'strong', 'em']
 
     def __str__(self):
@@ -83,7 +85,11 @@ class Vote(models.Model):
     value = models.IntegerField()  # +1 veya -1
 
     class Meta:
-        unique_together = ('user', 'question', 'answer')  # Her kullanıcı her içerik için bir oy verebilir
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'question'], name='unique_user_question_vote'),
+            models.UniqueConstraint(fields=['user', 'answer'], name='unique_user_answer_vote'),
+        ]
+
 
 class SavedItem(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -92,4 +98,4 @@ class SavedItem(models.Model):
     saved_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'question', 'answer')  # Her kullanıcı her içerik için bir kez kaydedebilir
+        unique_together = ('user', 'question', 'answer')

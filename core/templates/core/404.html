@@ -1,0 +1,8 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="container mt-5 text-center">
+    <h1>Sayfa Bulunamadı (404)</h1>
+    <p>Üzgünüz, aradığınız sayfa bulunamadı.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">Ana Sayfaya Dön</a>
+</div>
+{% endblock %}

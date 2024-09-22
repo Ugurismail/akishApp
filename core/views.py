@@ -16,6 +16,7 @@ from collections import defaultdict
 
 
 
+
 def signup(request):
     if request.method == 'POST':
         form = SignupForm(request.POST)
@@ -117,13 +118,29 @@ def profile(request, username=None):
     
     return render(request, 'core/profile.html', context)
 
+
+
 @login_required
 def question_detail(request, question_id):
+    # Soru ve ilgili verileri al
     question = get_object_or_404(Question, id=question_id)
-    # Order answers by created_at
     answers = Answer.objects.filter(question=question).order_by('created_at')
     subquestions = question.subquestions.all()
+
+    # Kullanıcı soruyu kaydetmiş mi?
     user_has_saved_question = SavedItem.objects.filter(user=request.user, question=question).exists()
+
+    # Soru için kaydedilme sayısı
+    question_save_count = SavedItem.objects.filter(question=question).count()
+
+    # Yanıtlar için kaydedilme sayıları
+    answer_save_counts = SavedItem.objects.filter(answer__in=answers).values('answer_id').annotate(count=Count('id'))
+    answer_save_dict = {item['answer_id']: item['count'] for item in answer_save_counts}
+
+    # Kullanıcının kaydettiği yanıtların ID'lerini al
+    saved_answer_ids = SavedItem.objects.filter(user=request.user, answer__in=answers).values_list('answer__id', flat=True)
+
+    # Yanıt ekleme formu
     form = AnswerForm(request.POST or None)
     if request.method == 'POST':
         if form.is_valid():
@@ -133,11 +150,7 @@ def question_detail(request, question_id):
             answer.save()
             messages.success(request, 'Yanıtınız başarıyla eklendi.')
             return redirect('question_detail', question_id=question.id)
-    # Check if the user has saved each answer
-    for answer in answers:
-        answer.user_has_saved = SavedItem.objects.filter(user=request.user, answer=answer).exists()
-    # Collect saved answer IDs for the template
-    saved_answer_ids = SavedItem.objects.filter(user=request.user, answer__in=answers).values_list('answer__id', flat=True)
+
     context = {
         'question': question,
         'answers': answers,
@@ -145,6 +158,8 @@ def question_detail(request, question_id):
         'form': form,
         'user_has_saved_question': user_has_saved_question,
         'saved_answer_ids': saved_answer_ids,
+        'answer_save_dict': answer_save_dict,
+        'question_save_count': question_save_count,
     }
     return render(request, 'core/question_detail.html', context)
 
@@ -175,13 +190,15 @@ def add_question(request):
         form = QuestionForm()
     return render(request, 'core/add_question.html', {'form': form})
 
+
 @login_required
 def edit_answer(request, answer_id):
-    answer = get_object_or_404(Answer, id=answer_id)
+    answer = get_object_or_404(Answer, id=answer_id, user=request.user)
     if request.method == 'POST':
         form = AnswerForm(request.POST, instance=answer)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Yanıt başarıyla güncellendi.')
             return redirect('question_detail', question_id=answer.question.id)
     else:
         form = AnswerForm(instance=answer)
@@ -450,35 +467,86 @@ def delete_question(request, question_id):
     else:
         return render(request, 'core/confirm_delete_question.html', {'question': question})
 
+from django.db import transaction
 
 @login_required
 def vote(request):
     if request.method == 'POST':
         content_type = request.POST.get('content_type')
         object_id = int(request.POST.get('object_id'))
-        value = int(request.POST.get('value'))
+        value = int(request.POST.get('value'))  # 1 veya -1
 
         if content_type == 'question':
             question = get_object_or_404(Question, id=object_id)
-            vote, created = Vote.objects.get_or_create(user=request.user, question=question)
-            if not created:
-                # If the vote already exists, adjust the vote count
-                question.votes -= vote.value
-            vote.value = value
-            vote.save()
-            question.votes += value
-            question.save()
-            return JsonResponse({'votes': question.votes})
+            with transaction.atomic():
+                vote, created = Vote.objects.get_or_create(
+                    user=request.user,
+                    question=question,
+                    defaults={'value': value}
+                )
+                if not created:
+                    # Kullanıcı daha önce oy vermiş
+                    if vote.value != value:
+                        # Önceki oyu geri al
+                        if vote.value == 1:
+                            question.upvotes -= 1
+                        elif vote.value == -1:
+                            question.downvotes -= 1
+                        # Yeni oyu ekle
+                        vote.value = value
+                        vote.save()
+                        if value == 1:
+                            question.upvotes += 1
+                        elif value == -1:
+                            question.downvotes += 1
+                    else:
+                        # Aynı oya tekrar basıldıysa, oy geri çekilir
+                        if vote.value == 1:
+                            question.upvotes -= 1
+                        elif vote.value == -1:
+                            question.downvotes -= 1
+                        vote.delete()
+                else:
+                    # Yeni oy
+                    if value == 1:
+                        question.upvotes += 1
+                    elif value == -1:
+                        question.downvotes += 1
+                question.save()
+            return JsonResponse({'upvotes': question.upvotes, 'downvotes': question.downvotes})
         elif content_type == 'answer':
             answer = get_object_or_404(Answer, id=object_id)
-            vote, created = Vote.objects.get_or_create(user=request.user, answer=answer)
-            if not created:
-                answer.votes -= vote.value
-            vote.value = value
-            vote.save()
-            answer.votes += value
-            answer.save()
-            return JsonResponse({'votes': answer.votes})
+            with transaction.atomic():
+                vote, created = Vote.objects.get_or_create(
+                    user=request.user,
+                    answer=answer,
+                    defaults={'value': value}
+                )
+                if not created:
+                    if vote.value != value:
+                        if vote.value == 1:
+                            answer.upvotes -= 1
+                        elif vote.value == -1:
+                            answer.downvotes -= 1
+                        vote.value = value
+                        vote.save()
+                        if value == 1:
+                            answer.upvotes += 1
+                        elif value == -1:
+                            answer.downvotes += 1
+                    else:
+                        if vote.value == 1:
+                            answer.upvotes -= 1
+                        elif vote.value == -1:
+                            answer.downvotes -= 1
+                        vote.delete()
+                else:
+                    if value == 1:
+                        answer.upvotes += 1
+                    elif value == -1:
+                        answer.downvotes += 1
+                answer.save()
+            return JsonResponse({'upvotes': answer.upvotes, 'downvotes': answer.downvotes})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 @login_required
@@ -565,17 +633,24 @@ def site_statistics(request):
 
 @login_required
 def delete_answer(request, answer_id):
-    answer = get_object_or_404(Answer, id=answer_id)
-
+    answer = get_object_or_404(Answer, id=answer_id, user=request.user)
     if request.method == 'POST':
-        if request.user == answer.user:
-            with transaction.atomic():
-                # Delete the answer
-                answer.delete()
-                messages.success(request, 'Yanıt başarıyla silindi.')
-            return redirect('question_detail', question_id=answer.question.id)
-        else:
-            messages.error(request, 'Bu yanıtı silme yetkiniz yok.')
-            return redirect('question_detail', question_id=answer.question.id)
-    else:
-        return render(request, 'core/confirm_delete_answer.html', {'answer': answer})
+        answer.delete()
+        messages.success(request, 'Yanıt başarıyla silindi.')
+        return redirect('question_detail', question_id=answer.question.id)
+    return render(request, 'core/delete_answer.html', {'answer': answer})
+
+@login_required
+def delete_question(request, question_id):
+    question = get_object_or_404(Question, id=question_id, user=request.user)
+    if request.method == 'POST':
+        question.delete()
+        messages.success(request, 'Soru başarıyla silindi.')
+        return redirect('user_homepage')
+    return render(request, 'core/delete_question.html', {'question': question})
+
+def user_profile(request, username):
+    user = get_object_or_404(User, username=username)
+    questions = Question.objects.filter(user=user)
+    answers = Answer.objects.filter(user=user)
+    return render(request, 'core/user_profile.html', {'profile_user': user, 'questions': questions, 'answers': answers})

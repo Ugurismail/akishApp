@@ -25,5 +25,5 @@ urlpatterns = [
     path('about/', views.about, name='about'),
     path('statistics/', views.site_statistics, name='site_statistics'),
     path('answer/<int:answer_id>/delete/', views.delete_answer, name='delete_answer'),
-
+    path('profile/<str:username>/', views.user_profile, name='profile'),
 ]

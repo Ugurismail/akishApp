@@ -1,24 +1,8 @@
 // vote_save.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    // CSRF tokenını almak için fonksiyon
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                // Bu çerez, aradığımız isimle başlıyor mu?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    // Oy verme butonları
     const voteButtons = document.querySelectorAll('.vote-btn');
 
     voteButtons.forEach(btn => {
@@ -31,20 +15,30 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch('/vote/', {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-CSRFToken': csrfToken,
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: `content_type=${contentType}&object_id=${objectId}&value=${value}`,
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+                return response.json();
+            })
             .then(data => {
-                if (data.votes !== undefined) {
+                if (data.upvotes !== undefined && data.downvotes !== undefined) {
                     if (contentType === 'question') {
-                        document.getElementById('question-votes').innerText = data.votes;
+                        document.getElementById('question-upvotes').innerText = data.upvotes;
+                        document.getElementById('question-downvotes').innerText = data.downvotes;
                     } else if (contentType === 'answer') {
-                        document.getElementById(`answer-votes-${objectId}`).innerText = data.votes;
+                        document.getElementById(`answer-upvotes-${objectId}`).innerText = data.upvotes;
+                        document.getElementById(`answer-downvotes-${objectId}`).innerText = data.downvotes;
                     }
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
         });
     });
@@ -62,12 +56,17 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch('/save-item/', {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-CSRFToken': csrfToken,
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: `content_type=${contentType}&object_id=${objectId}`,
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.status === 'saved') {
                     icon.classList.remove('far');
@@ -76,6 +75,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     icon.classList.remove('fas');
                     icon.classList.add('far');
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
         });
     });

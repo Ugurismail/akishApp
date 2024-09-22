@@ -90,3 +90,7 @@ body {
     border: none;
     padding: 0;
 }
+
+.icon-black-white {
+    color: black; /* Siyah renk */
+}
