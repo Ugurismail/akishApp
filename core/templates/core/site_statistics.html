@@ -10,5 +10,76 @@
         <li class="list-group-item">Toplam Beğeni Sayısı: {{ total_likes }}</li>
         <li class="list-group-item">Toplam Beğenmeme Sayısı: {{ total_dislikes }}</li>
     </ul>
+
+    <h2 class="mt-4">En Çok Soru Soran Kullanıcılar</h2>
+    <ul class="list-group">
+        {% for user in top_question_users %}
+            <li class="list-group-item">
+                <a href="{% url 'profile' user.username %}">{{ user.username }}</a> - {{ user.question_count }} soru
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2 class="mt-4">En Çok Yanıt Veren Kullanıcılar</h2>
+    <ul class="list-group">
+        {% for user in top_answer_users %}
+            <li class="list-group-item">
+                <a href="{% url 'profile' user.username %}">{{ user.username }}</a> - {{ user.answer_count }} yanıt
+            </li>
+        {% endfor %}
+    </ul>
+    <h2 class="mt-4">En Çok Beğenilen Sorular</h2>
+<ul class="list-group">
+    {% for question in top_liked_questions %}
+        <li class="list-group-item">
+            <a href="{% url 'question_detail' question.id %}">{{ question.question_text }}</a> - {{ question.like_count }} beğeni
+        </li>
+    {% endfor %}
+</ul>
+
+<h2 class="mt-4">En Çok Beğenilen Yanıtlar</h2>
+<ul class="list-group">
+    {% for answer in top_liked_answers %}
+        <li class="list-group-item">
+            {{ answer.answer_text|truncatewords:20 }} - {{ answer.like_count }} beğeni
+        </li>
+    {% endfor %}
+</ul>
+
+<h2 class="mt-4">En Çok Kaydedilen Sorular</h2>
+<ul class="list-group">
+    {% for question in top_saved_questions %}
+        <li class="list-group-item">
+            <a href="{% url 'question_detail' question.id %}">{{ question.question_text }}</a> - {{ question.save_count }} kez kaydedildi
+        </li>
+    {% endfor %}
+</ul>
+
+<h2 class="mt-4">En Çok Kaydedilen Yanıtlar</h2>
+<ul class="list-group">
+    {% for answer in top_saved_answers %}
+        <li class="list-group-item">
+            {{ answer.answer_text|truncatewords:20 }} - {{ answer.save_count }} kez kaydedildi
+        </li>
+    {% endfor %}
+</ul>
+<h2 class="mt-4">En Çok Kullanılan 10 Kelime</h2>
+<ul class="list-group">
+    {% for word, count in top_words %}
+        <li class="list-group-item">{{ word }} - {{ count }} kez kullanılmış</li>
+    {% endfor %}
+</ul>
+
+<h2 class="mt-4">Kelime Arama</h2>
+<form method="get" action="{% url 'site_statistics' %}">
+    <div class="input-group mb-3">
+        <input type="text" name="search_word" class="form-control" placeholder="Aramak istediğiniz kelime" value="{{ search_word }}">
+        <button class="btn btn-primary" type="submit">Ara</button>
+    </div>
+</form>
+{% if search_word %}
+    <p>"{{ search_word }}" kelimesi toplam {{ search_word_count }} kez kullanılmış.</p>
+{% endif %}
+
 </div>
 {% endblock %}

@@ -4,13 +4,10 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from .models import Question, Answer, StartingQuestion, SavedItem, Vote
 from .forms import QuestionForm, AnswerForm, StartingQuestionForm, SignupForm, LoginForm, WordUsageForm,InvitationForm
-import json
 from django.http import JsonResponse
 from django.db.models import Q,Count
 from django.contrib import messages
 from django.db import transaction
-import colorsys
-import re
 from django.utils import timezone
 from collections import defaultdict
 from .models import Message
@@ -19,6 +16,9 @@ from .models import Invitation, UserProfile
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
+from collections import Counter
+import colorsys, re, json
+
 
 def signup(request):
     if request.method == 'POST':
@@ -633,12 +633,77 @@ def user_profile(request, username):
     }
     return render(request, 'core/user_profile.html', context)
 
+
+
 def site_statistics(request):
-    user_count = User.objects.filter(Q(questions__isnull=False) | Q(answers__isnull=False)).distinct().count()
+    # Mevcut istatistikler
+    user_count = User.objects.filter(
+        Q(questions__isnull=False) | Q(answers__isnull=False)
+    ).distinct().count()
     total_questions = Question.objects.count()
     total_answers = Answer.objects.count()
     total_likes = Vote.objects.filter(value=1).count()
     total_dislikes = Vote.objects.filter(value=-1).count()
+
+    # En çok soru soran kullanıcılar
+    top_question_users = User.objects.annotate(
+        question_count=Count('questions')
+    ).order_by('-question_count')[:5]
+
+    # En çok yanıt veren kullanıcılar
+    top_answer_users = User.objects.annotate(
+        answer_count=Count('answers')
+    ).order_by('-answer_count')[:5]
+
+    # En çok beğenilen sorular
+    top_liked_questions = Question.objects.annotate(
+        like_count=Count('vote', filter=Q(vote__value=1))
+    ).order_by('-like_count')[:5]
+
+    # En çok beğenilen yanıtlar
+    top_liked_answers = Answer.objects.annotate(
+        like_count=Count('vote', filter=Q(vote__value=1))
+    ).order_by('-like_count')[:5]
+
+    # En çok kaydedilen sorular
+    top_saved_questions = Question.objects.annotate(
+        save_count=Count('saveditem')
+    ).order_by('-save_count')[:5]
+
+    # En çok kaydedilen yanıtlar
+    top_saved_answers = Answer.objects.annotate(
+        save_count=Count('saveditem')
+    ).order_by('-save_count')[:5]
+
+    # Tüm soru ve yanıt metinlerini al
+    question_texts = Question.objects.values_list('question_text', flat=True)
+    answer_texts = Answer.objects.values_list('answer_text', flat=True)
+
+    # Metinleri birleştir
+    all_texts = ' '.join(question_texts) + ' ' + ' '.join(answer_texts)
+
+    # Metinleri küçük harfe çevir ve özel karakterleri kaldır
+    all_texts = all_texts.lower()
+    words = re.findall(r'\b\w+\b', all_texts)
+
+    # İstenmeyen kelimeleri çıkar (örn. bağlaçlar)
+    stopwords = set([
+        've', 'ile', 'bir', 'bu', 'için', 'da', 'de', 'ki', 'mi', 'ne', 'ama',
+        'fakat', 'daha', 'çok', 'gibi', 'den', 'ben', 'sen', 'o', 'biz', 'siz',
+        'onlar', 'mı', 'mu', 'mü', 'her', 'şey', 'sadece', 'bütün', 'diğer',
+        'hem', 'veya', 'ya', 'şu', 'öyle', 'böyle', 'eğer', 'çünkü', 'kadar'
+    ])
+    filtered_words = [word for word in words if word not in stopwords]
+
+    # Kelime sıklıklarını hesapla
+    word_counts = Counter(filtered_words)
+    top_words = word_counts.most_common(10)
+
+    # Kelime arama
+    search_word = request.GET.get('search_word')
+    search_word_count = None
+    if search_word:
+        search_word_count = word_counts.get(search_word.lower(), 0)
 
     context = {
         'user_count': user_count,
@@ -646,8 +711,19 @@ def site_statistics(request):
         'total_answers': total_answers,
         'total_likes': total_likes,
         'total_dislikes': total_dislikes,
+        'top_question_users': top_question_users,
+        'top_answer_users': top_answer_users,
+        'top_liked_questions': top_liked_questions,
+        'top_liked_answers': top_liked_answers,
+        'top_saved_questions': top_saved_questions,
+        'top_saved_answers': top_saved_answers,
+        'top_words': top_words,
+        'search_word_count': search_word_count,
+        'search_word': search_word,
     }
+
     return render(request, 'core/site_statistics.html', context)
+
 
 @login_required
 def delete_answer(request, answer_id):
