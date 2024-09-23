@@ -34,4 +34,5 @@ urlpatterns = [
     path('ajax/get_unread_message_count/', views.get_unread_message_count, name='get_unread_message_count'),
     path('send-invitation/', views.send_invitation, name='send_invitation'),
     path('grant-invitation-quota/', views.grant_invitation_quota, name='grant_invitation_quota'),
+    path('question/<int:question_id>/answer/<int:answer_id>/', views.single_answer, name='single_answer')
 ]

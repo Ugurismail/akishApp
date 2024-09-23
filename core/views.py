@@ -844,3 +844,20 @@ def grant_invitation_quota(request):
     else:
         form = GrantQuotaForm()
     return render(request, 'core/grant_invitation_quota.html', {'form': form})
+
+def single_answer(request, question_id, answer_id):
+    question = get_object_or_404(Question, id=question_id)
+    answer = get_object_or_404(Answer, id=answer_id, question=question)
+    show_all = request.GET.get('show_all')
+
+    if show_all:
+        answers = question.answers.all()
+    else:
+        answers = [answer]
+
+    context = {
+        'question': question,
+        'answers': answers,
+        'single_answer_view': True,
+    }
+    return render(request, 'core/single_answer.html', context)

@@ -1,0 +1,48 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ question.question_text }}</h2>
+    {% for answer in answers %}
+        <div class="answer" id="answer-{{ answer.id }}">
+            <p>{{ answer.answer_text }}</p>
+            <div class="answer-footer">
+                <span>Yazan: {{ answer.user.username }}</span>
+                <!-- Üç Nokta Menüsü -->
+                <div class="dropdown d-inline">
+                    <a href="#" class="text-decoration-none" id="dropdownMenu{{ answer.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        &#8226;&#8226;&#8226;
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu{{ answer.id }}">
+                        <li><a class="dropdown-item" href="{% url 'compose_message' answer.user.username %}">Mesaj Gönder</a></li>
+                        <li><a class="dropdown-item copy-link" href="#" data-answer-id="{{ answer.id }}">Linki Kopyala</a></li>
+                        <li><a class="dropdown-item share-link" href="#" data-answer-id="{{ answer.id }}">Paylaş</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    {% if not show_all %}
+        <a href="?show_all=1" class="btn btn-primary mt-3">Tüm Yanıtları Göster</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Aynı JavaScript kodlarını buraya da ekleyin -->
+<script>
+$(document).ready(function() {
+    $('.copy-link').click(function(e) {
+        e.preventDefault();
+        var answerId = $(this).data('answer-id');
+        var tempInput = $("<input>");
+        $("body").append(tempInput);
+        var link = "{{ request.build_absolute_uri }}";
+        tempInput.val(link).select();
+        document.execCommand("copy");
+        tempInput.remove();
+        alert("Link kopyalandı!");
+    });
+});
+</script>
+{% endblock %}

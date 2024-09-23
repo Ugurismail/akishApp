@@ -1,6 +1,7 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% load custom_tags %} 
+{% load custom_tags %}
+
 {% block content %}
 <div class="container mt-5">
     <div class="row">
@@ -54,7 +55,7 @@
             <!-- Yanıtlar -->
             <h4>Yanıtlar</h4>
             {% for answer in answers %}
-            <div class="card mb-3">
+            <div class="card mb-3" id="answer-{{ answer.id }}">
                 <div class="card-body">
                     <!-- Yanıt Metni -->
                     {% if answer.answer_text|length > 500 %}
@@ -97,9 +98,9 @@
                                 </a>
                             {% endif %}
                         </div>
-                        <!-- Sağ Kısım: Kullanıcı Bilgisi ve Tarih -->
+                        <!-- Sağ Kısım: Kullanıcı Bilgisi ve Üç Nokta Menüsü -->
                         <div class="text-end">
-                            <small class="text-muted">
+                            <small class="text-muted me-2">
                                 <a href="{% url 'profile' answer.user.username %}">{{ answer.user.username }}</a>
                                 | {{ answer.created_at|date:"Y-m-d H:i" }}
                                 {% if answer.updated_at and answer.updated_at != answer.created_at %}
@@ -112,8 +113,24 @@
                                     {% endif %}
                                 {% endif %}
                             </small>
+                            <!-- Üç Nokta Menüsü -->
+                            <div class="dropdown d-inline">
+                                <a href="#" class="text-decoration-none" id="dropdownMenu{{ answer.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    &#8226;&#8226;&#8226;
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenu{{ answer.id }}">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'compose_message' answer.user.username %}">Mesaj Gönder</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item copy-link" href="#" data-answer-id="{{ answer.id }}">Linki Kopyala</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item share-link" href="#" data-answer-id="{{ answer.id }}">Paylaş</a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        
                     </div>
                 </div>
             </div>
@@ -192,6 +209,37 @@
     </div>
 </div>
 
+<!-- Paylaşım Modal'ı -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="shareModalLabel">Paylaş</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group">
+            <li class="list-group-item">
+                <a href="#" id="shareTwitter" target="_blank">
+                    <i class="fab fa-twitter"></i> X (Twitter) ile Paylaş
+                </a>
+            </li>
+            <li class="list-group-item">
+                <a href="#" id="shareFacebook" target="_blank">
+                    <i class="fab fa-facebook"></i> Facebook ile Paylaş
+                </a>
+            </li>
+            <li class="list-group-item">
+                <a href="#" id="copyLink">
+                    <i class="fas fa-link"></i> Linki Kopyala
+                </a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modals -->
 {% include 'core/link_modal.html' %}
 {% include 'core/reference_modal.html' %}
@@ -199,10 +247,14 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Gerekli JavaScript ve jQuery Kütüphaneleri -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'core/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'core/js/answer_form.js' %}"></script>
 <script src="{% static 'core/js/vote_save.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // "Tamamını oku" Fonksiyonu
         const readMoreLinks = document.querySelectorAll('.read-more');
         readMoreLinks.forEach(function(link) {
             link.addEventListener('click', function(event) {
@@ -219,6 +271,48 @@
                     fullText.style.display = 'block';
                     this.textContent = 'Daha az göster';
                 }
+            });
+        });
+
+        // "Linki Kopyala" Fonksiyonu
+        $('.copy-link').click(function(e) {
+            e.preventDefault();
+            var answerId = $(this).data('answer-id');
+            var tempInput = $("<input>");
+            $("body").append(tempInput);
+            var link = "{% url 'single_answer' question.id 0 %}".replace('/0/', '/' + answerId + '/');
+            var absoluteLink = window.location.origin + link;
+            tempInput.val(absoluteLink).select();
+            document.execCommand("copy");
+            tempInput.remove();
+            alert("Link kopyalandı!");
+        });
+
+        // "Paylaş" Fonksiyonu
+        var currentAnswerId;
+
+        $('.share-link').click(function(e) {
+            e.preventDefault();
+            currentAnswerId = $(this).data('answer-id');
+            $('#shareModal').modal('show');
+        });
+
+        $('#shareModal').on('shown.bs.modal', function () {
+            var link = "{% url 'single_answer' question.id 0 %}".replace('/0/', '/' + currentAnswerId + '/');
+            var absoluteLink = window.location.origin + link;
+            var twitterUrl = "https://twitter.com/intent/tweet?url=" + encodeURIComponent(absoluteLink);
+            var facebookUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(absoluteLink);
+
+            $('#shareTwitter').attr('href', twitterUrl);
+            $('#shareFacebook').attr('href', facebookUrl);
+            $('#copyLink').off('click').on('click', function(e) {
+                e.preventDefault();
+                var tempInput = $("<input>");
+                $("body").append(tempInput);
+                tempInput.val(absoluteLink).select();
+                document.execCommand("copy");
+                tempInput.remove();
+                alert("Link kopyalandı!");
             });
         });
     });
