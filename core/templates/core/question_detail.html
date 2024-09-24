@@ -3,133 +3,120 @@
 {% load custom_tags %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-1">
     <div class="row">
         <!-- Soru Detayı -->
-        <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <!-- Soru Metni -->
-                    <h3>{{ question.question_text }}</h3>
-                    <!-- Soru Detayları -->
-                    <small class="text-muted">
-                        <a href="{% url 'profile' question.user.username %}">{{ question.user.username }}</a>
-                        | {{ question.created_at|date:"Y-m-d H:i" }}
-                    </small>
-                    <!-- Soruya Oy Verme ve Kaydetme -->
-                    <div class="mt-2 d-flex justify-content-between align-items-center">
-                        <!-- Sol Kısım: Oy Verme ve Kaydetme -->
-                        <div>
-                            <!-- Upvote Butonu ve Sayısı -->
-                            <a href="#" class="vote-btn me-1" data-content-type="question" data-object-id="{{ question.id }}" data-value="1" title="Beğen">
-                                <i class="fas fa-caret-up"></i>
+        <div class="col-md-9">
+            <h2>{{ question.question_text }}</h2>
+                <!-- Soruya Oy Verme ve Kaydetme -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <!-- Sol Kısım: Oy Verme ve Kaydetme -->
+                    <div>
+                        <!-- Upvote Butonu ve Sayısı -->
+                        <a href="#" class="vote-btn me-1" data-content-type="question" data-object-id="{{ question.id }}" data-value="1" title="Beğen">
+                            <i class="fas fa-caret-up"></i>
+                        </a>
+                        <span id="question-upvotes">{{ question.upvotes }}</span>
+                        <!-- Downvote Butonu ve Sayısı -->
+                        <a href="#" class="vote-btn ms-1 me-1" data-content-type="question" data-object-id="{{ question.id }}" data-value="-1" title="Beğenme">
+                            <i class="fas fa-caret-down"></i>
+                        </a>
+                        <span id="question-downvotes">{{ question.downvotes }}</span>
+                        <!-- Kaydetme Butonu -->
+                        <a href="#" class="save-btn icon-black-white" data-content-type="question" data-object-id="{{ question.id }}" title="Kaydet">
+                            <i class="{% if user_has_saved_question %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                        </a>
+                        <span>{{ question_saved_count }}</span>
+                        <!-- Düzenle ve Sil Butonları (Sadece İçerik Sahibi İçin) -->
+                        {% if question.user == request.user %}
+                            <a href="{% url 'delete_question' question.id %}" class="ms-2" title="Sil">
+                                <i class="fas fa-trash-alt icon-black-white"></i>
                             </a>
-                            <span id="question-upvotes">{{ question.upvotes }}</span>
-                            <!-- Downvote Butonu ve Sayısı -->
-                            <a href="#" class="vote-btn ms-1 me-1" data-content-type="question" data-object-id="{{ question.id }}" data-value="-1" title="Beğenme">
-                                <i class="fas fa-caret-down"></i>
-                            </a>
-                            <span id="question-downvotes">{{ question.downvotes }}</span>
-                            <!-- Kaydetme Butonu -->
-                            <a href="#" class="save-btn icon-black-white" data-content-type="question" data-object-id="{{ question.id }}" title="Kaydet">
-                                <i class="{% if user_has_saved_question %}fas{% else %}far{% endif %} fa-bookmark"></i>
-                            </a>
-                            <span>{{ question_saved_count }}</span>
-                            <!-- Düzenle ve Sil Butonları (Sadece İçerik Sahibi İçin) -->
-                            {% if question.user == request.user %}
-                                <a href="{% url 'delete_question' question.id %}" class="ms-2" title="Sil">
-                                    <i class="fas fa-trash-alt icon-black-white"></i>
-                                </a>
-                            {% endif %}
-                        </div>
-                        <!-- Sağ Kısım: Kullanıcı Bilgisi ve Tarih -->
-                        <div class="text-end">
-                            <small class="text-muted">
-                                <a href="{% url 'profile' question.user.username %}">{{ question.user.username }}</a>
-                                | {{ question.created_at|date:"Y-m-d H:i" }}
-                            </small>
-                        </div>
+                        {% endif %}
+                    </div>
+                    <!-- Sağ Kısım: Kullanıcı Bilgisi ve Tarih -->
+                    <div class="text-end">
+                        <small class="text-muted">
+                            <a href="{% url 'profile' question.user.username %}">{{ question.user.username }}</a>
+                            | {{ question.created_at|date:"Y-m-d H:i" }} 
+                        </small>
                     </div>
                 </div>
-            </div>
             <!-- Yanıtlar -->
-            <h4>Yanıtlar</h4>
             {% for answer in answers %}
-            <div class="card mb-3" id="answer-{{ answer.id }}">
-                <div class="card-body">
-                    <!-- Yanıt Metni -->
-                    {% if answer.answer_text|length > 500 %}
-                        <!-- Kısaltılmış Yanıt -->
-                        <p class="answer-text" id="answer-summary-{{ answer.id }}">{{ answer.answer_text|slice:":500" }}...</p>
-                        <!-- Tam Yanıt (Başlangıçta Gizli) -->
-                        <p class="answer-text" id="answer-full-{{ answer.id }}" style="display: none;">{{ answer.answer_text|safe }}</p>
-                        <!-- "Tamamını oku" Linki -->
-                        <a href="#" class="read-more" data-answer-id="{{ answer.id }}">Tamamını oku</a>
-                    {% else %}
-                        <!-- Kısa Yanıt -->
-                        <p class="answer-text">{{ answer.answer_text|safe }}</p>
-                    {% endif %}
-                    <!-- Alt Kısım: Oylar, Butonlar, Kullanıcı Bilgisi -->
-                    <div class="d-flex justify-content-between align-items-center">
-                        <!-- Sol Kısım: Oy Verme ve Kaydetme -->
-                        <div>
-                            <!-- Upvote Butonu ve Sayısı -->
-                            <a href="#" class="vote-btn me-1" data-content-type="answer" data-object-id="{{ answer.id }}" data-value="1" title="Beğen">
-                                <i class="fas fa-caret-up"></i>
+            <div class="mb-3 mt-2 answer" id="answer-{{ answer.id }}">
+                <!-- Yanıt Metni -->
+                {% if answer.answer_text|length > 500 %}
+                    <!-- Kısaltılmış Yanıt -->
+                    <p class="answer-text" id="answer-summary-{{ answer.id }}">{{ answer.answer_text|slice:":500" }}...</p>
+                    <!-- Tam Yanıt (Başlangıçta Gizli) -->
+                    <p class="answer-text" id="answer-full-{{ answer.id }}" style="display: none;">{{ answer.answer_text|safe }}</p>
+                    <!-- "Tamamını oku" Linki -->
+                    <a href="#" class="read-more" data-answer-id="{{ answer.id }}">Tamamını oku</a>
+                {% else %}
+                    <!-- Kısa Yanıt -->
+                    <p class="answer-text">{{ answer.answer_text|safe }}</p>
+                {% endif %}
+                <!-- Alt Kısım: Oylar, Butonlar, Kullanıcı Bilgisi -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <!-- Sol Kısım: Oy Verme ve Kaydetme -->
+                    <div>
+                        <!-- Upvote Butonu ve Sayısı -->
+                        <a href="#" class="vote-btn me-1" data-content-type="answer" data-object-id="{{ answer.id }}" data-value="1" title="Beğen">
+                            <i class="fas fa-caret-up"></i>
+                        </a>
+                        <span id="answer-upvotes-{{ answer.id }}">{{ answer.upvotes }}</span>
+                        <!-- Downvote Butonu ve Sayısı -->
+                        <a href="#" class="vote-btn ms-1 me-1" data-content-type="answer" data-object-id="{{ answer.id }}" data-value="-1" title="Beğenme">
+                            <i class="fas fa-caret-down"></i>
+                        </a>
+                        <span id="answer-downvotes-{{ answer.id }}">{{ answer.downvotes }}</span>
+                        <!-- Kaydetme Butonu -->
+                        <a href="#" class="save-btn ms-2" data-content-type="answer" data-object-id="{{ answer.id }}" title="Kaydet">
+                            <i class="{% if answer.id in saved_answer_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                        </a>
+                        <span>{{ answer_save_dict|get_item:answer.id }}</span>
+                        <!-- Düzenle ve Sil Butonları (Sadece İçerik Sahibi İçin) -->
+                        {% if answer.user == request.user %}
+                            <a href="{% url 'edit_answer' answer.id %}" class="ms-2" title="Düzenle">
+                                <i class="fas fa-edit icon-black-white"></i>
                             </a>
-                            <span id="answer-upvotes-{{ answer.id }}">{{ answer.upvotes }}</span>
-                            <!-- Downvote Butonu ve Sayısı -->
-                            <a href="#" class="vote-btn ms-1 me-1" data-content-type="answer" data-object-id="{{ answer.id }}" data-value="-1" title="Beğenme">
-                                <i class="fas fa-caret-down"></i>
+                            <a href="{% url 'delete_answer' answer.id %}" class="ms-2" title="Sil">
+                                <i class="fas fa-trash-alt icon-black-white"></i>
                             </a>
-                            <span id="answer-downvotes-{{ answer.id }}">{{ answer.downvotes }}</span>
-                            <!-- Kaydetme Butonu -->
-                            <a href="#" class="save-btn ms-2" data-content-type="answer" data-object-id="{{ answer.id }}" title="Kaydet">
-                                <i class="{% if answer.id in saved_answer_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
-                            </a>
-                            <span>{{ answer_save_dict|get_item:answer.id }}</span>
-                            <!-- Düzenle ve Sil Butonları (Sadece İçerik Sahibi İçin) -->
-                            {% if answer.user == request.user %}
-                                <a href="{% url 'edit_answer' answer.id %}" class="ms-2" title="Düzenle">
-                                    <i class="fas fa-edit icon-black-white"></i>
-                                </a>
-                                <a href="{% url 'delete_answer' answer.id %}" class="ms-2" title="Sil">
-                                    <i class="fas fa-trash-alt icon-black-white"></i>
-                                </a>
-                            {% endif %}
-                        </div>
-                        <!-- Sağ Kısım: Kullanıcı Bilgisi ve Üç Nokta Menüsü -->
-                        <div class="text-end">
-                            <small class="text-muted me-2">
-                                <a href="{% url 'profile' answer.user.username %}">{{ answer.user.username }}</a>
-                                | {{ answer.created_at|date:"Y-m-d H:i" }}
-                                {% if answer.updated_at and answer.updated_at != answer.created_at %}
-                                    {% if answer.updated_at|date:"Y-m-d" == answer.created_at|date:"Y-m-d" %}
-                                        <!-- Aynı gün ise sadece saati göster -->
-                                        ~ {{ answer.updated_at|date:"H:i" }}
-                                    {% else %}
-                                        <!-- Farklı gün ise tarihi ve saati göster -->
-                                        ~ {{ answer.updated_at|date:"Y-m-d H:i" }}
-                                    {% endif %}
+                        {% endif %}
+                    </div>
+                    <!-- Sağ Kısım: Kullanıcı Bilgisi ve Üç Nokta Menüsü -->
+                    <div class="text-end">
+                        <small class="text-muted me-2">
+                            <a href="{% url 'profile' answer.user.username %}">{{ answer.user.username }}</a>
+                            | {{ answer.created_at|date:"Y-m-d H:i" }}
+                            {% if answer.updated_at and answer.updated_at != answer.created_at %}
+                                {% if answer.updated_at|date:"Y-m-d" == answer.created_at|date:"Y-m-d" %}
+                                    <!-- Aynı gün ise sadece saati göster -->
+                                    ~ {{ answer.updated_at|date:"H:i" }}
+                                {% else %}
+                                    <!-- Farklı gün ise tarihi ve saati göster -->
+                                    ~ {{ answer.updated_at|date:"Y-m-d H:i" }}
                                 {% endif %}
-                            </small>
-                            <!-- Üç Nokta Menüsü -->
-                            <div class="dropdown d-inline">
-                                <a href="#" class="text-decoration-none" id="dropdownMenu{{ answer.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                    &#8226;&#8226;&#8226;
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenu{{ answer.id }}">
-                                    <li>
-                                        <a class="dropdown-item" href="{% url 'compose_message' answer.user.username %}">Mesaj Gönder</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item copy-link" href="#" data-answer-id="{{ answer.id }}">Linki Kopyala</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item share-link" href="#" data-answer-id="{{ answer.id }}">Paylaş</a>
-                                    </li>
-                                </ul>
-                            </div>
+                            {% endif %}
+                        </small>
+                        <!-- Üç Nokta Menüsü -->
+                        <div class="dropdown d-inline">
+                            <a href="#" class="text-decoration-none" id="dropdownMenu{{ answer.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                &#8226;&#8226;&#8226;
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenu{{ answer.id }}">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'compose_message' answer.user.username %}">Mesaj Gönder</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item copy-link" href="#" data-answer-id="{{ answer.id }}">Linki Kopyala</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item share-link" href="#" data-answer-id="{{ answer.id }}">Paylaş</a>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -139,10 +126,7 @@
             {% endfor %}
             <!-- Yanıt Ekleme Formu -->
             <div class="card mt-4">
-                <div class="card-header">
-                    Yanıtınız
-                </div>
-                <div class="card-body">
+                <div class="card-body answer-arkaRenk">
                     <form method="post">
                         {% csrf_token %}
                         <!-- Araç Çubuğu -->
@@ -170,7 +154,7 @@
             </div>
         </div>
         <!-- Sağ Sütun: Alt Sorular ve İlgili Sorular -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <!-- Alt Sorular -->
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">

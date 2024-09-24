@@ -10,7 +10,16 @@
         <li class="list-group-item">Toplam Beğeni Sayısı: {{ total_likes }}</li>
         <li class="list-group-item">Toplam Beğenmeme Sayısı: {{ total_dislikes }}</li>
     </ul>
-
+    <h2 class="mt-4">Kelime Arama</h2>
+    <form method="get" action="{% url 'site_statistics' %}">
+        <div class="input-group mb-3">
+            <input type="text" name="search_word" class="form-control" placeholder="Aramak istediğiniz kelime" value="{{ search_word }}">
+            <button class="btn btn-primary" type="submit">Ara</button>
+        </div>
+    </form>
+    {% if search_word %}
+        <p>"{{ search_word }}" kelimesi toplam {{ search_word_count }} kez kullanılmış.</p>
+    {% endif %}
     <h2 class="mt-4">En Çok Soru Soran Kullanıcılar</h2>
     <ul class="list-group">
         {% for user in top_question_users %}
@@ -70,16 +79,7 @@
     {% endfor %}
 </ul>
 
-<h2 class="mt-4">Kelime Arama</h2>
-<form method="get" action="{% url 'site_statistics' %}">
-    <div class="input-group mb-3">
-        <input type="text" name="search_word" class="form-control" placeholder="Aramak istediğiniz kelime" value="{{ search_word }}">
-        <button class="btn btn-primary" type="submit">Ara</button>
-    </div>
-</form>
-{% if search_word %}
-    <p>"{{ search_word }}" kelimesi toplam {{ search_word_count }} kez kullanılmış.</p>
-{% endif %}
+
 
 </div>
 {% endblock %}

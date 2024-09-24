@@ -45,7 +45,8 @@
 
 /* Ana İçerik Padding Ayarı */
 body {
-    padding-top: 70px; /* Navbar yüksekliğine göre ayarlayın */
+    padding-top: 5%; /* Navbar yüksekliğine göre ayarlayın */
+    background-color:#F5F5F5;
 }
 
 /* Style for Vote and Save Buttons */
@@ -101,4 +102,18 @@ body {
 .nav-link .badge {
     font-size: 0.75em;
     /* Diğer stil ayarları */
+}
+/* Yanıtları düzenlemek için */
+.answer {
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-top: 5%;
+}
+
+/* Son yanıtın altındaki çizgiyi kaldırma */
+.answer:last-child {
+    border-bottom: none;
+}
+.answer-arkaRenk{
+    background-color:#F5F5F5 ;
 }

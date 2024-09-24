@@ -51,6 +51,17 @@
                             <i class="fa-solid fa-umbrella"></i>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="extraMenu">
+                            {% if user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link position-relative" href="{% url 'inbox' %}">
+                                    Mesaj
+                                    {% if unread_message_count > 0 %}
+                                        <i class="fas fa-envelope text-danger"></i>
+                                    {% else %}
+                                        <i class="fas fa-envelope"></i>
+                                    {% endif %}
+                                </a>
+                            </li>
                             <li>
                                 <a class="dropdown-item" href="https://www.typingme.com/10-parmak-klavye-q/10-parmak-q.php" target="_blank">
                                     <i class="fa-solid fa-keyboard"></i> 10 Parmak
@@ -68,21 +79,10 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'site_statistics' %}">Site İstatistikleri</a>
-                            </li>x
+                            </li>
                         </ul>
                     </li>
                     <!-- Kullanıcı Giriş/Çıkış -->
-                    {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link position-relative" href="{% url 'inbox' %}">
-                            Mesaj
-                            {% if unread_message_count > 0 %}
-                                <i class="fas fa-envelope text-danger"></i>
-                            {% else %}
-                                <i class="fas fa-envelope"></i>
-                            {% endif %}
-                        </a>
-                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'profile' %}">Profil</a>
                     </li>
