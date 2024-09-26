@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var height = 800;
 
         var zoom = d3.zoom()
-            .scaleExtent([0.5, 5])
+            .scaleExtent([0.5, 50])
             .on("zoom", function(event) {
                 svg.attr("transform", event.transform);
             });
@@ -47,10 +47,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 .id(function(d) { return d.id; })
                 .distance(200)
             )
-            .force("charge", d3.forceManyBody().strength(-500))
+            .force("charge", d3.forceManyBody().strength(-200))
             .force("center", d3.forceCenter(width / 2, height / 2))
             .force("collision", d3.forceCollide().radius(function(d) {
-                return d.size + 5;
+                return d.size + 100;
             }))
             .force("userGrouping", userGroupingForce()); // Kullanıcı gruplama kuvveti eklendi
 
