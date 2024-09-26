@@ -32,6 +32,7 @@ class Question(models.Model):
     class Meta:
         ordering = ['created_at']
 
+
 # Kullanıcının tanımladığı başlangıç soruları
 class StartingQuestion(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='starting_questions')

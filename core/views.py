@@ -633,8 +633,6 @@ def user_profile(request, username):
     }
     return render(request, 'core/user_profile.html', context)
 
-
-
 def site_statistics(request):
     # Mevcut istatistikler
     user_count = User.objects.filter(
@@ -723,7 +721,6 @@ def site_statistics(request):
     }
 
     return render(request, 'core/site_statistics.html', context)
-
 
 @login_required
 def delete_answer(request, answer_id):

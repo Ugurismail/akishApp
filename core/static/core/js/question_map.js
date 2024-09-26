@@ -41,13 +41,18 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr("fill", "#999")
             .style("stroke", "none");
 
+        // Simülasyonu oluşturun ve kuvvetleri ekleyin
         var simulation = d3.forceSimulation(nodes)
             .force("link", d3.forceLink(links)
                 .id(function(d) { return d.id; })
-                .distance(200) // Mesafeyi artırdık
+                .distance(200)
             )
-            .force("charge", d3.forceManyBody().strength(-500)) // İtme kuvvetini artırdık
-            .force("center", d3.forceCenter(width / 2, height / 2));
+            .force("charge", d3.forceManyBody().strength(-500))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collision", d3.forceCollide().radius(function(d) {
+                return d.size + 5;
+            }))
+            .force("userGrouping", userGroupingForce()); // Kullanıcı gruplama kuvveti eklendi
 
         var link = svg.append("g")
             .attr("class", "links")
@@ -113,6 +118,37 @@ document.addEventListener('DOMContentLoaded', function () {
             d.fx = null;
             d.fy = null;
         }
+
+        // Kullanıcı gruplama kuvveti fonksiyonu
+        function userGroupingForce() {
+            var strength = 0.1; // Kuvvetin gücü
+            var nodesByUser = {};
+
+            function force(alpha) {
+                nodes.forEach(function(d) {
+                    // Her kullanıcı için düğümleri grupla
+                    d.users.forEach(function(user_id) {
+                        if (!nodesByUser[user_id]) {
+                            nodesByUser[user_id] = [];
+                        }
+                        nodesByUser[user_id].push(d);
+                    });
+                });
+
+                // Her kullanıcı grubu için merkez noktayı hesapla ve düğümleri merkeze doğru çek
+                for (var user_id in nodesByUser) {
+                    var groupNodes = nodesByUser[user_id];
+                    var centerX = d3.mean(groupNodes, function(d) { return d.x; });
+                    var centerY = d3.mean(groupNodes, function(d) { return d.y; });
+                    groupNodes.forEach(function(node) {
+                        node.vx += (centerX - node.x) * strength * alpha;
+                        node.vy += (centerY - node.y) * strength * alpha;
+                    });
+                }
+            }
+
+            return force;
+        }
     }
 
     // Başlangıçta tüm verilerle haritayı oluştur
@@ -170,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Arama sonuçları dışında bir yere tıklanınca sonuçları gizle
     document.addEventListener('click', function(event) {
-        if (!userSearchInput.contains(event.target)) {
+        if (!userSearchInput.contains(event.target) && !userSearchResults.contains(event.target)) {
             userSearchResults.innerHTML = '';
         }
     });
