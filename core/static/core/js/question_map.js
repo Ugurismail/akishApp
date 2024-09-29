@@ -1,213 +1,320 @@
 // question_map.js
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Harita verilerini global bir değişkende tutalım
-    var questionNodes = JSON.parse(document.getElementById('question-nodes-data').textContent);
-    var allNodes = questionNodes.nodes;
-    var allLinks = questionNodes.links;
+    // Parse the question data from the DOM
+    var questionData = JSON.parse(document.getElementById('question-nodes-data').textContent);
 
-    function createChart(nodes, links) {
-        d3.select("#chart").html("");
+    // Get the dimensions for the SVG
+    var width = document.getElementById('chart').clientWidth;
+    var height = 800;
 
-        var width = document.getElementById('chart').clientWidth;
-        var height = 800;
+    // Create the SVG element with zoom and pan functionality
+    var svg = d3.select("#chart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
 
-        var zoom = d3.zoom()
-            .scaleExtent([0.5, 50])
-            .on("zoom", function(event) {
-                svg.attr("transform", event.transform);
+    // Create a group to hold all elements
+    var g = svg.append("g");
+
+    // Define the arrow markers for links
+    var defs = svg.append("defs");
+
+    defs.append("marker")
+        .attr("id", "arrowhead")
+        .attr("viewBox", "-0 -5 10 10")
+        .attr("refX", 25)
+        .attr("refY", 0)
+        .attr("orient", "auto")
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .append("path")
+        .attr("d", "M0,-5L10,0L0,5")
+        .attr("fill", "#999");
+
+    // Initialize the simulation
+    var simulation = d3.forceSimulation()
+        .force("link", d3.forceLink()
+            .id(function (d) { return d.id; })
+            .distance(150)
+        )
+        .force("charge", d3.forceManyBody()
+            .strength(-200)
+        )
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collide", d3.forceCollide()
+            .radius(function (d) { return d.size * 1.5; })
+        );
+
+    // Create links
+    var link = g.append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(questionData.links)
+        .enter().append("line")
+        .attr("stroke-width", 2)
+        .attr("stroke", "#999")
+        .attr("marker-end", "url(#arrowhead)");
+
+    // Create nodes
+    var node = g.append("g")
+        .attr("class", "nodes")
+        .selectAll("circle")
+        .data(questionData.nodes)
+        .enter().append("circle")
+        .attr("r", function (d) { return d.size; })
+        .attr("fill", function (d) {
+            if (d.users.length > 1) {
+                return "#A9A9A9"; // Gray color for shared questions
+            } else {
+                return d.color; // User-specific color
+            }
+        })
+        .on("click", function (event, d) {
+            window.location.href = "/question/" + d.question_id + "/";
+        })
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended)
+        );
+
+    // Create labels
+    var label = g.append("g")
+        .attr("class", "labels")
+        .selectAll("text")
+        .data(questionData.nodes)
+        .enter().append("text")
+        .attr("dy", -10)
+        .attr("text-anchor", "middle")
+        .text(function (d) { return d.label; })
+        .style("font-size", function (d) {
+            // Base font size adjusted by the number of users
+            return (12 + (d.users.length * 2)) + "px";
+        });
+
+    // Start the simulation
+    simulation
+        .nodes(questionData.nodes)
+        .on("tick", ticked);
+
+    simulation.force("link")
+        .links(questionData.links);
+
+    // Ticking function to update positions
+    function ticked() {
+        link
+            .attr("x1", function (d) { return d.source.x; })
+            .attr("y1", function (d) { return d.source.y; })
+            .attr("x2", function (d) { return d.target.x; })
+            .attr("y2", function (d) { return d.target.y; });
+
+        node
+            .attr("cx", function (d) { return d.x; })
+            .attr("cy", function (d) { return d.y; });
+
+        label
+            .attr("x", function (d) { return d.x; })
+            .attr("y", function (d) { return d.y - d.size - 5; }); // Position label above the node
+    }
+
+    // Dragging functions
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        // Uncomment the following lines if you want nodes to be free after dragging
+        // d.fx = null;
+        // d.fy = null;
+    }
+
+    // Add zoom and pan functionality
+    svg.call(d3.zoom()
+        .scaleExtent([0.05, 5]) // Allow zooming out more to see all nodes
+        .on("zoom", function (event) {
+            g.attr("transform", event.transform);
+            updateNodeVisibility(event.transform.k);
+        })
+    );
+
+    // Function to update node visibility based on zoom level
+    function updateNodeVisibility(zoomLevel) {
+        node.each(function(d) {
+            // Nodes with more users stay more visible when zoomed out
+            var minOpacity = 0.8;
+            var maxOpacity = 1;
+            var userCountFactor = (d.users.length - 1) / (questionData.maxUserCount - 1) || 0;
+            var opacity = minOpacity + (maxOpacity - minOpacity) * userCountFactor;
+    
+            // Adjust opacity based on zoom level
+            if (zoomLevel < 0.5) {
+                opacity = opacity * zoomLevel * 2; // Fade out less important nodes
+            }
+            d.opacity = opacity; // Store the computed opacity in data
+    
+            // Apply opacity to the node
+            d3.select(this).style("opacity", d.opacity);
+        });
+    
+        label.each(function(d) {
+            // Labels follow the same opacity as their nodes
+            d3.select(this).style("opacity", d.opacity);
+        });
+    
+        label.style("font-size", function(d) {
+            // Adjust font size based on zoom level and user count
+            var baseSize = 12 + (d.users.length * 2);
+            return baseSize * zoomLevel + "px";
+        });
+    }
+    
+
+    // Compute the maximum number of users for any question
+    questionData.maxUserCount = d3.max(questionData.nodes, function(d) { return d.users.length; }) || 1;
+
+    // Initialize node visibility
+    updateNodeVisibility(1);
+
+    // Event listeners for the buttons
+    document.getElementById('btn-me').addEventListener('click', function () {
+        fetch('/map-data/?filter=me')
+            .then(response => response.json())
+            .then(data => {
+                // Update the graph with the new data
+                updateGraph(data);
             });
+    });
 
-        var svg = d3.select("#chart")
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .call(zoom)
-            .append("g");
+    document.getElementById('btn-all').addEventListener('click', function () {
+        fetch('/map-data/')
+            .then(response => response.json())
+            .then(data => {
+                // Update the graph with the new data
+                updateGraph(data);
+            });
+    });
 
-        var defs = svg.append("defs");
+    // Function to update the graph with new data
+    function updateGraph(newData) {
+        // Stop the simulation
+        simulation.stop();
 
-        defs.append("marker")
-            .attr("id", "arrowhead")
-            .attr("viewBox", "-0 -5 10 10")
-            .attr("refX", 25)
-            .attr("refY", 0)
-            .attr("orient", "auto")
-            .attr("markerWidth", 6)
-            .attr("markerHeight", 6)
-            .attr("xoverflow", "visible")
-            .append("svg:path")
-            .attr("d", "M 0,-5 L 10 ,0 L 0,5")
-            .attr("fill", "#999")
-            .style("stroke", "none");
+        // Remove existing elements
+        link.remove();
+        node.remove();
+        label.remove();
 
-        // Simülasyonu oluşturun ve kuvvetleri ekleyin
-        var simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links)
-                .id(function(d) { return d.id; })
-                .distance(200)
-            )
-            .force("charge", d3.forceManyBody().strength(-200))
-            .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("collision", d3.forceCollide().radius(function(d) {
-                return d.size + 100;
-            }))
-            .force("userGrouping", userGroupingForce()); // Kullanıcı gruplama kuvveti eklendi
+        // Update questionData
+        questionData = newData;
 
-        var link = svg.append("g")
+        // Recalculate maxUserCount
+        questionData.maxUserCount = d3.max(questionData.nodes, function (d) { return d.users.length; });
+
+        // Recreate links
+        link = g.append("g")
             .attr("class", "links")
             .selectAll("line")
-            .data(links)
+            .data(questionData.links)
             .enter().append("line")
             .attr("stroke-width", 2)
             .attr("stroke", "#999")
             .attr("marker-end", "url(#arrowhead)");
 
-        var node = svg.append("g")
+        // Recreate nodes
+        node = g.append("g")
             .attr("class", "nodes")
             .selectAll("circle")
-            .data(nodes)
+            .data(questionData.nodes)
             .enter().append("circle")
-            .attr("r", function(d) { return d.size; })
-            .attr("fill", function(d) { return d.color; })
+            .attr("r", function (d) { return d.size; })
+            .attr("fill", function (d) {
+                if (d.users.length > 1) {
+                    return "#A9A9A9";
+                } else {
+                    return d.color;
+                }
+            })
+            .on("click", function (event, d) {
+                window.location.href = "/question/" + d.question_id + "/";
+            })
             .call(d3.drag()
                 .on("start", dragstarted)
                 .on("drag", dragged)
-                .on("end", dragended))
-            .on("click", function(event, d) {
-                window.location.href = "/question/" + d.question_id + "/";
+                .on("end", dragended)
+            );
+
+        // Recreate labels
+        label = g.append("g")
+            .attr("class", "labels")
+            .selectAll("text")
+            .data(questionData.nodes)
+            .enter().append("text")
+            .attr("dy", -10)
+            .attr("text-anchor", "middle")
+            .text(function (d) { return d.label; })
+            .style("font-size", function (d) {
+                return (12 + (d.users.length * 2)) + "px";
             });
 
-        var label = svg.append("g")
-            .selectAll("text")
-            .data(nodes)
-            .enter().append("text")
-            .attr("dy", -25)
-            .attr("text-anchor", "middle")
-            .text(function(d) { return d.label; });
+        // Restart the simulation
+        simulation.nodes(questionData.nodes);
+        simulation.force("link").links(questionData.links);
+        simulation.alpha(1).restart();
 
-        simulation.on("tick", function() {
-            link
-                .attr("x1", function(d) { return d.source.x; })
-                .attr("y1", function(d) { return d.source.y; })
-                .attr("x2", function(d) { return d.target.x; })
-                .attr("y2", function(d) { return d.target.y; });
-
-            node
-                .attr("cx", function(d) { return d.x; })
-                .attr("cy", function(d) { return d.y; });
-
-            label
-                .attr("x", function(d) { return d.x; })
-                .attr("y", function(d) { return d.y - 10; });
-        });
-
-        function dragstarted(event, d) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-        }
-
-        function dragged(event, d) {
-            d.fx = event.x;
-            d.fy = event.y;
-        }
-
-        function dragended(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-        }
-
-        // Kullanıcı gruplama kuvveti fonksiyonu
-        function userGroupingForce() {
-            var strength = 0.1; // Kuvvetin gücü
-            var nodesByUser = {};
-
-            function force(alpha) {
-                nodes.forEach(function(d) {
-                    // Her kullanıcı için düğümleri grupla
-                    d.users.forEach(function(user_id) {
-                        if (!nodesByUser[user_id]) {
-                            nodesByUser[user_id] = [];
-                        }
-                        nodesByUser[user_id].push(d);
-                    });
-                });
-
-                // Her kullanıcı grubu için merkez noktayı hesapla ve düğümleri merkeze doğru çek
-                for (var user_id in nodesByUser) {
-                    var groupNodes = nodesByUser[user_id];
-                    var centerX = d3.mean(groupNodes, function(d) { return d.x; });
-                    var centerY = d3.mean(groupNodes, function(d) { return d.y; });
-                    groupNodes.forEach(function(node) {
-                        node.vx += (centerX - node.x) * strength * alpha;
-                        node.vy += (centerY - node.y) * strength * alpha;
-                    });
-                }
-            }
-
-            return force;
-        }
+        // Initialize node visibility
+        updateNodeVisibility(1);
     }
 
-    // Başlangıçta tüm verilerle haritayı oluştur
-    createChart(allNodes, allLinks);
-
-    // Filtreleme butonlarının etkinliklerini tanımla
-    document.getElementById('btn-me').addEventListener('click', function() {
-        fetch('/map-data/?filter=me')
-            .then(response => response.json())
-            .then(data => {
-                createChart(data.nodes, data.links);
-            });
-    });
-
-    document.getElementById('btn-all').addEventListener('click', function() {
-        createChart(allNodes, allLinks);
-    });
-
-    // Kullanıcı arama kısmı
-    const userSearchInput = document.getElementById('user-search-input');
-    const userSearchResults = document.getElementById('user-search-results');
-
-    userSearchInput.addEventListener('keyup', function() {
-        const query = userSearchInput.value;
-        if (query.length > 1) {
-            fetch(`/user-search/?q=${encodeURIComponent(query)}`)
+    // User search functionality
+    document.getElementById('user-search-input').addEventListener('input', function () {
+        var query = this.value;
+        if (query.length > 0) {
+            fetch('/user-search/?q=' + encodeURIComponent(query))
                 .then(response => response.json())
                 .then(data => {
-                    userSearchResults.innerHTML = '';
-                    if (data.results.length > 0) {
-                        const ul = document.createElement('ul');
-                        data.results.forEach(user => {
-                            const li = document.createElement('li');
-                            li.textContent = user.username;
-                            li.addEventListener('click', function() {
-                                fetch(`/map-data/?user_id=${user.id}`)
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        createChart(data.nodes, data.links);
-                                    });
-                                userSearchResults.innerHTML = '';
-                                userSearchInput.value = user.username;
-                            });
-                            ul.appendChild(li);
-                        });
-                        userSearchResults.appendChild(ul);
-                    } else {
-                        userSearchResults.innerHTML = '<p>Kullanıcı bulunamadı.</p>';
-                    }
+                    var resultsDiv = document.getElementById('user-search-results');
+                    resultsDiv.innerHTML = '';
+                    data.results.forEach(function (user) {
+                        var div = document.createElement('div');
+                        div.classList.add('user-search-item');
+                        div.textContent = user.username;
+                        div.dataset.userId = user.id;
+                        resultsDiv.appendChild(div);
+                    });
+                    resultsDiv.style.display = 'block';
                 });
         } else {
-            userSearchResults.innerHTML = '';
+            document.getElementById('user-search-results').style.display = 'none';
         }
     });
 
-    // Arama sonuçları dışında bir yere tıklanınca sonuçları gizle
-    document.addEventListener('click', function(event) {
-        if (!userSearchInput.contains(event.target) && !userSearchResults.contains(event.target)) {
-            userSearchResults.innerHTML = '';
+    // Handle user search result click
+    document.getElementById('user-search-results').addEventListener('click', function (event) {
+        if (event.target && event.target.matches('.user-search-item')) {
+            var userId = event.target.dataset.userId;
+            document.getElementById('user-search-input').value = event.target.textContent;
+            this.style.display = 'none';
+            fetch('/map-data/?user_id=' + userId)
+                .then(response => response.json())
+                .then(data => {
+                    updateGraph(data);
+                });
+        }
+    });
+
+    // Hide user search results when clicking outside
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('#user-search-input') && !event.target.closest('#user-search-results')) {
+            document.getElementById('user-search-results').style.display = 'none';
         }
     });
 });

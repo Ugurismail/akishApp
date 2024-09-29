@@ -250,7 +250,7 @@ def question_map(request):
                 "id": f"q{hash(key)}",  # Unique ID based on question_text
                 "label": question.question_text,
                 "users": user_ids,
-                "size": 20 + 5 * (len(user_ids) - 1),
+                "size": 20 + 10 * (len(user_ids) - 1),
                 "color": '',
                 "question_id": question.id,  # Store a valid question ID
                 "question_ids": [question.id],  # List of question IDs with same text

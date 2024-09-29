@@ -117,3 +117,18 @@ body {
 .answer-arkaRenk{
     background-color:#F5F5F5 ;
 }
+.nodes circle {
+    stroke: #fff;
+    stroke-width: 1.5px;
+}
+
+.labels text {
+    pointer-events: none;
+    font-weight: bold;
+    fill: #333;
+}
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+    margin-right: 8px;
+}
