@@ -84,6 +84,13 @@ body {
 
 /* Genel Link Stilini Sınırlama */
 
+.list-group-item {
+    cursor: pointer;
+}
+
+.list-group-item:hover {
+    background-color: #f0f0f0;
+}
 
 /* Butonların Varsayılan Stilini Kaldırma */
 .vote-btn, .save-btn {

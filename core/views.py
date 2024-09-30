@@ -359,14 +359,30 @@ def add_starting_question(request):
     else:
         form = StartingQuestionForm()
     return render(request, 'core/add_starting_question.html', {'form': form})
-
 @login_required
-def search_questions(request):
+def search(request):
     query = request.GET.get('q', '')
     results = []
+
     if query:
-        questions = Question.objects.filter(question_text__icontains=query).values('id', 'question_text')[:10]
-        results = list(questions)
+        # Soruları ara
+        question_results = Question.objects.filter(question_text__icontains=query).values('id', 'question_text')[:5]
+        for q in question_results:
+            results.append({
+                'type': 'question',
+                'id': q['id'],
+                'text': q['question_text'],
+            })
+
+        # Kullanıcıları ara
+        user_results = User.objects.filter(username__icontains=query).values('username')[:5]
+        for u in user_results:
+            results.append({
+                'type': 'user',
+                'id': u['username'],
+                'text': '@' + u['username'],
+            })
+
     return JsonResponse({'results': results})
 
 @login_required
@@ -728,8 +744,9 @@ def delete_answer(request, answer_id):
     if request.method == 'POST':
         answer.delete()
         messages.success(request, 'Yanıt başarıyla silindi.')
-        return redirect('question_detail', question_id=answer.question.id)
-    return render(request, 'core/delete_answer.html', {'answer': answer})
+    else:
+        messages.error(request, 'Yanıt silinemedi.')
+    return redirect('question_detail', question_id=answer.question.id)
 
 @login_required
 def delete_question(request, question_id):

@@ -69,11 +69,11 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 if (data.status === 'saved') {
-                    icon.classList.remove('far');
-                    icon.classList.add('fas');
+                    icon.classList.remove('bi-bookmark');
+                    icon.classList.add('bi-bookmark-fill');
                 } else if (data.status === 'removed') {
-                    icon.classList.remove('fas');
-                    icon.classList.add('far');
+                    icon.classList.remove('bi-bookmark-fill');
+                    icon.classList.add('bi-bookmark');
                 }
             })
             .catch(error => {

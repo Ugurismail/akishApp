@@ -2,10 +2,10 @@
 {% block content %}
 <div class="container mt-5">
     <h2>Soruyu Sil</h2>
-    <p>Bu soruyu silmek istediğinizden emin misiniz?</p>
+    <p>Bu soruyu silmek istediğinizden emin misiniz? Eğer bu soruyu silerseniz bu soruya bağlı tüm alt sorular ve yanıtlar da silinecektir. Eğer ufak bir hata yaptıysanız - yazım yanlışı vs.- birinci işçiye ulaşın o düzeltsin, işi bu sonuçta.</p>
     <form method="post">
         {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Evet, Sil</button>
+        <button type="submit" class="btn btn-danger">Yok yok, kesin sil</button>
         <a href="{% url 'question_detail' question.id %}" class="btn btn-secondary">İptal</a>
     </form>
 </div>
