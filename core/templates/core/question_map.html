@@ -6,12 +6,18 @@
         <div class="col-md-12">
             <!-- Kontrol Paneli -->
             <div class="card mb-3">
-                <div class="card-body" style="position: relative;">
+                <div class="card-body">
                     <button class="btn btn-primary btn-block mb-2" id="btn-me">Ben</button>
                     <button class="btn btn-secondary btn-block mb-2" id="btn-all">Tümü</button>
                     <div style="position: relative;">
                         <input type="text" class="form-control mb-0" id="user-search-input" placeholder="Kullanıcı Ara">
                         <div id="user-search-results"></div>
+                    </div>
+                    <!-- Seçili Kullanıcılar Listesi -->
+                    <div id="selected-users" class="mt-2">
+                        <h5>Seçili Kullanıcılar:</h5>
+                        <ul id="selected-users-list" class="list-group"></ul>
+                        <button class="btn btn-success mt-2" id="btn-filter-users">Filtrele</button>
                     </div>
                 </div>
             </div>

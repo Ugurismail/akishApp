@@ -401,20 +401,20 @@ def user_search(request):
 @login_required
 def map_data(request):
     filter_type = request.GET.get('filter', '')
-    user_id = request.GET.get('user_id', '')
+    user_ids = request.GET.getlist('user_id')
     current_user = request.user
 
     if filter_type == 'me':
-        user = current_user
-    elif user_id:
-        user = User.objects.get(id=user_id)
+        selected_users = [current_user]
+    elif user_ids:
+        selected_users = User.objects.filter(id__in=user_ids)
     else:
-        user = None
+        selected_users = None
 
-    if user:
-        # Retrieve all questions where the user is the creator or associated
+    if selected_users:
+        # Seçili kullanıcılara göre soruları filtrele
         questions = Question.objects.filter(
-            Q(user=user) | Q(users=user) | Q(subquestions__user=user)
+            Q(user__in=selected_users) | Q(users__in=selected_users) | Q(subquestions__user__in=selected_users)
         ).distinct()
     else:
         questions = Question.objects.all()

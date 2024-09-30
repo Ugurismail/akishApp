@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Get the dimensions for the SVG
     var width = document.getElementById('chart').clientWidth;
-    var height = 800; // İhtiyaçlarınıza göre ayarlayabilirsiniz
+    var height = 800; // İhtiyacınıza göre ayarlayabilirsiniz
 
     // Create the SVG element with zoom and pan functionality
     var svg = d3.select("#chart")
@@ -190,24 +190,127 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize node visibility
     updateNodeVisibility(1);
 
-    // Event listeners for the buttons
+    // Seçili kullanıcıları tutmak için bir dizi
+    var selectedUsers = [];
+
+    // Kullanıcı arama sonuçlarına tıklandığında
+    document.getElementById('user-search-results').addEventListener('click', function (event) {
+        if (event.target && event.target.matches('.user-search-item')) {
+            var userId = event.target.dataset.userId;
+            var username = event.target.textContent;
+
+            // Kullanıcı zaten seçiliyse eklemeyin
+            if (!selectedUsers.includes(userId)) {
+                selectedUsers.push(userId);
+                addUserToSelectedList(userId, username);
+            }
+
+            document.getElementById('user-search-input').value = '';
+            this.style.display = 'none';
+        }
+    });
+
+    // Seçili kullanıcılar listesine kullanıcı ekleme fonksiyonu
+    function addUserToSelectedList(userId, username) {
+        var userList = document.getElementById('selected-users-list');
+        var li = document.createElement('li');
+        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+        li.textContent = username;
+        li.dataset.userId = userId;
+
+        var removeBtn = document.createElement('button');
+        removeBtn.classList.add('btn', 'btn-sm', 'btn-danger');
+        removeBtn.textContent = 'Kaldır';
+        removeBtn.addEventListener('click', function () {
+            // Kullanıcıyı listeden ve seçili kullanıcılardan kaldır
+            selectedUsers = selectedUsers.filter(function (id) {
+                return id !== userId;
+            });
+            userList.removeChild(li);
+        });
+
+        li.appendChild(removeBtn);
+        userList.appendChild(li);
+    }
+
+    // "Filtrele" butonuna tıklandığında
+    document.getElementById('btn-filter-users').addEventListener('click', function () {
+        if (selectedUsers.length > 0) {
+            var params = selectedUsers.map(function(id) {
+                return 'user_id=' + id;
+            }).join('&');
+            fetch('/map-data/?' + params)
+                .then(response => response.json())
+                .then(data => {
+                    updateGraph(data);
+                });
+        }
+    });
+
+    // "Ben" ve "Tümü" butonlarına tıklandığında seçili kullanıcıları temizleyin
     document.getElementById('btn-me').addEventListener('click', function () {
+        // Seçili kullanıcıları temizleyin
+        selectedUsers = [];
+        document.getElementById('selected-users-list').innerHTML = '';
+
         fetch('/map-data/?filter=me')
             .then(response => response.json())
             .then(data => {
-                // Update the graph with the new data
                 updateGraph(data);
             });
     });
 
     document.getElementById('btn-all').addEventListener('click', function () {
+        // Seçili kullanıcıları temizleyin
+        selectedUsers = [];
+        document.getElementById('selected-users-list').innerHTML = '';
+
         fetch('/map-data/')
             .then(response => response.json())
             .then(data => {
-                // Update the graph with the new data
                 updateGraph(data);
             });
     });
+
+    // User search functionality
+    document.getElementById('user-search-input').addEventListener('input', function () {
+        var query = this.value;
+        if (query.length > 0) {
+            fetch('/user-search/?q=' + encodeURIComponent(query))
+                .then(response => response.json())
+                .then(data => {
+                    var resultsDiv = document.getElementById('user-search-results');
+                    resultsDiv.innerHTML = '';
+                    data.results.forEach(function (user) {
+                        var div = document.createElement('div');
+                        div.classList.add('user-search-item');
+                        div.textContent = user.username;
+                        div.dataset.userId = user.id;
+                        resultsDiv.appendChild(div);
+                    });
+                    resultsDiv.style.display = 'block';
+                });
+        } else {
+            document.getElementById('user-search-results').style.display = 'none';
+        }
+    });
+
+    // Hide user search results when clicking outside
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('#user-search-input') && !event.target.closest('#user-search-results')) {
+            document.getElementById('user-search-results').style.display = 'none';
+        }
+    });
+
+    // Function to zoom to a specific node
+    function zoomToNode(node) {
+        var scale = 1.5; // Yakınlaştırma ölçeği
+        var x = -node.x * scale + width / 2;
+        var y = -node.y * scale + height / 2;
+        svg.transition()
+            .duration(750)
+            .call(zoom.transform, d3.zoomIdentity.translate(x, y).scale(scale));
+    }
 
     // Function to update the graph with new data
     function updateGraph(newData) {
@@ -300,20 +403,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         } else {
             document.getElementById('user-search-results').style.display = 'none';
-        }
-    });
-
-    // Handle user search result click
-    document.getElementById('user-search-results').addEventListener('click', function (event) {
-        if (event.target && event.target.matches('.user-search-item')) {
-            var userId = event.target.dataset.userId;
-            document.getElementById('user-search-input').value = event.target.textContent;
-            this.style.display = 'none';
-            fetch('/map-data/?user_id=' + userId)
-                .then(response => response.json())
-                .then(data => {
-                    updateGraph(data);
-                });
         }
     });
 
