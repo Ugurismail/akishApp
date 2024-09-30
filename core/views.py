@@ -18,6 +18,7 @@ from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from collections import Counter
 import colorsys, re, json
+import random
 
 
 def signup(request):
@@ -304,10 +305,6 @@ def question_map(request):
         'focus_question_id': question_id,
     })
 
-@login_required
-def user_homepage(request):
-    starting_questions = StartingQuestion.objects.filter(user=request.user)
-    return render(request, 'core/user_homepage.html', {'starting_questions': starting_questions})
 
 @login_required
 def add_subquestion(request, question_id):
@@ -624,15 +621,26 @@ def search_questions(request):
     else:
         return render(request, 'core/search_results.html', {'results': results})
     
+
 @login_required
 def user_homepage(request):
+    # Tüm soruları alın ve yanıt sayılarını hesaplayın
+    all_questions = Question.objects.annotate(answers_count=Count('answers'))
+
+    # Rastgele yanıtları alın
+    all_answers = Answer.objects.select_related('question').all()
+    random_items = random.sample(list(all_answers), min(len(all_answers), 10))  # En fazla 10 tane
+
+    # Kullanıcının başlangıç sorularını alın
     starting_questions = StartingQuestion.objects.filter(user=request.user)
-    today = timezone.now().date()
-    todays_questions = Question.objects.filter(created_at__date=today)
+
     return render(request, 'core/user_homepage.html', {
         'starting_questions': starting_questions,
-        'todays_questions': todays_questions,
+        'all_questions': all_questions,
+        'random_items': random_items,
     })
+
+
 
 def about(request):
     return render(request, 'core/about.html')

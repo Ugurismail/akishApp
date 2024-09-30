@@ -1,41 +1,54 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="row">
-    <!-- Sol Sütun: Bugünün Soruları -->
-    <div class="col-md-8">
-        <!-- Bugün Sorulan Sorular -->
-        <h3>Bugün Sorulan Sorular</h3>
-        <ul class="list-group">
-            {% for question in todays_questions %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <a href="{% url 'question_detail' question.id %}">
+<div class="container">
+    <div class="row">
+        <!-- Sol Taraf: Tüm Sorular -->
+        <div class="col-md-2" style="border-right: 1px solid #ccc;">
+            <h4>Tüm Sorular</h4>
+            <ul class="list-unstyled">
+                {% for question in all_questions %}
+                <li class="d-flex justify-content-between align-items-center mt-2">
+                    <a href="{% url 'question_detail' question.id %}" class="text-dark text-decoration-none">
                         {{ question.question_text }}
                     </a>
-                    <!-- Haritada Gör İkonu -->
-                    <a href="{% url 'question_map' %}?question_id={{ question.id }}" title="Haritada Gör">
-                        <i class="bi bi-geo-alt-fill"></i>
-                    </a>
+                    <small class="">{{ question.answers_count }}</small>
                 </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Orta Kısım: Rastgele Sorular ve Yanıtlar -->
+        <div class="col-md-7">
+            <h4>Rastgele Sorular ve Yanıtlar</h4>
+            {% for item in random_items %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <a href="{% url 'question_detail' item.question.id %}" class="text-dark text-decoration-none">
+                        {{ item.question.question_text }}
+                    </a>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ item.answer_text }}</p>
+                </div>
+            </div>
             {% endfor %}
-        </ul>
-    </div>
-    <!-- Sağ Sütun: Başlangıç Sorularınız -->
-    <div class="col-md-4">
-        <h3>Başlangıç Sorularınız</h3>
-        <ul class="list-group">
-            {% for starting_question in starting_questions %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <a href="{% url 'question_detail' starting_question.question.id %}">
+        </div>
+
+        <!-- Sağ Taraf: Başlangıç Sorularınız -->
+        <div class="col-md-3" style="border-left: 1px solid #ccc;">
+            <h4>Başlangıç Sorularınız</h4>
+            <ul class="list-unstyled">
+                {% for starting_question in starting_questions %}
+                <li>
+                    <a href="{% url 'question_detail' starting_question.question.id %}" class="text-dark text-decoration-none">
                         {{ starting_question.question.question_text }}
                     </a>
-                    <!-- Haritada Gör İkonu -->
-                    <a href="{% url 'question_map' %}?question_id={{ starting_question.question.id }}" title="Haritada Gör">
-                        <i class="bi bi-geo-alt-fill"></i>
-                    </a>
                 </li>
-            {% endfor %}
-        </ul>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -6,6 +6,22 @@
     transition: padding 0.3s ease, background-color 0.3s ease;
 }
 
+/* Linklerin altını kaldırmak ve mavi renkleri kaldırmak için */
+a.text-dark {
+    color: #000 !important;
+    text-decoration: none !important;
+}
+
+a.text-dark:hover {
+    text-decoration: underline !important;
+}
+
+/* Rozetlerin boyutunu ayarlamak için */
+.badge {
+    font-size: 0.9em;
+}
+
+
 .navbar-shrink {
     padding: 0.5rem 1rem; /* Küçüldüğünde padding */
 }
