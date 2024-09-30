@@ -19,18 +19,62 @@
             </ul>
         </div>
 
-        <!-- Orta Kısım: Rastgele Sorular ve Yanıtlar -->
+<!-- Orta Kısım: Rastgele Sorular ve Yanıtlar -->
         <div class="col-md-7">
             <h4>Rastgele Sorular ve Yanıtlar</h4>
-            {% for item in random_items %}
+            {% for answer in random_items %}
             <div class="card mb-3">
+                <!-- Soru Başlığı -->
                 <div class="card-header">
-                    <a href="{% url 'question_detail' item.question.id %}" class="text-dark text-decoration-none">
-                        {{ item.question.question_text }}
+                    <a href="{% url 'question_detail' answer.question.id %}" class="text-dark text-decoration-none">
+                        {{ answer.question.question_text }}
                     </a>
                 </div>
+                <!-- Yanıt İçeriği -->
                 <div class="card-body">
-                    <p class="card-text">{{ item.answer_text }}</p>
+                    <p class="card-text">{{ answer.answer_text }}</p>
+                    <!-- Ek Özellikler -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <!-- Kullanıcı Bilgisi -->
+                        <div>
+                            <small class="text-muted">Yanıtlayan: {{ answer.user.username }}</small>
+                        </div>
+                        <!-- İşlemler -->
+                        <div>
+                            <!-- Upvote/Downvote Butonları -->
+                            <button class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                            <!-- Kaydet Butonu -->
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-bookmark"></i>
+                            </button>
+                            <!-- Üç Nokta Menüsü -->
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <!-- Menü Öğeleri -->
+                                    <li><a class="dropdown-item" href="#">Düzenle</a></li>
+                                    <li><a class="dropdown-item" href="#">Sil</a></li>
+                                    <!-- Diğer seçenekler -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tarihler -->
+                    <div>
+                        <small class="text-muted">
+                            Oluşturma Tarihi: {{ answer.created_at|date:"d M Y H:i" }}
+                            {% if answer.created_at != answer.updated_at %}
+                                | Güncelleme Tarihi: {{ answer.updated_at|date:"d M Y H:i" }}
+                            {% endif %}
+                        </small>
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -40,11 +84,12 @@
         <div class="col-md-3" style="border-left: 1px solid #ccc;">
             <h4>Başlangıç Sorularınız</h4>
             <ul class="list-unstyled">
-                {% for starting_question in starting_questions %}
-                <li>
-                    <a href="{% url 'question_detail' starting_question.question.id %}" class="text-dark text-decoration-none">
-                        {{ starting_question.question.question_text }}
+                {% for item in starting_questions_with_counts %}
+                <li class="d-flex justify-content-between align-items-center">
+                    <a href="{% url 'question_detail' item.question.id %}" class="text-dark text-decoration-none">
+                        {{ item.question.question_text }}
                     </a>
+                    <span class="badge bg-primary rounded-pill">{{ item.total_subquestions }}</span>
                 </li>
                 {% endfor %}
             </ul>

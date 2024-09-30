@@ -6,13 +6,13 @@ from django.dispatch import receiver
 import uuid
 import bleach
 
+
 class Question(models.Model):
     question_text = models.CharField(max_length=255)
+    subquestions = models.ManyToManyField('self', symmetrical=False, related_name='parent_questions', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    parent_questions = models.ManyToManyField(
-        'self', blank=True, related_name='subquestions', symmetrical=False
-    )
+    # parent_questions alanını kaldırdık
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='questions')
     users = models.ManyToManyField(
         User, related_name='associated_questions', blank=True
@@ -28,6 +28,18 @@ class Question(models.Model):
 
     def get_subquestions(self):
         return self.subquestions.all()
+
+    def get_total_subquestions_count(self, visited=None):
+        if visited is None:
+            visited = set()
+        if self.id in visited:
+            return 0
+        visited.add(self.id)
+        count = 0
+        for subquestion in self.subquestions.all():
+            count += 1  # Doğrudan alt soruyu say
+            count += subquestion.get_total_subquestions_count(visited)  # Alt soruların alt sorularını say
+        return count
 
     class Meta:
         ordering = ['created_at']

@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Question, Answer, StartingQuestion, SavedItem, Vote
 from .forms import QuestionForm, AnswerForm, StartingQuestionForm, SignupForm, LoginForm, WordUsageForm,InvitationForm
 from django.http import JsonResponse
-from django.db.models import Q,Count
+from django.db.models import Q,Count, Max
 from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
@@ -19,6 +19,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from collections import Counter
 import colorsys, re, json
 import random
+from django.db.models.functions import Coalesce
 
 
 def signup(request):
@@ -625,17 +626,28 @@ def search_questions(request):
 @login_required
 def user_homepage(request):
     # Tüm soruları alın ve yanıt sayılarını hesaplayın
-    all_questions = Question.objects.annotate(answers_count=Count('answers'))
+    all_questions = Question.objects.annotate(
+        answers_count=Count('answers'),
+        latest_answer_date=Max('answers__created_at')
+    ).annotate(
+        last_activity=Coalesce('latest_answer_date', 'created_at')
+    ).order_by('-last_activity')
 
     # Rastgele yanıtları alın
     all_answers = Answer.objects.select_related('question').all()
     random_items = random.sample(list(all_answers), min(len(all_answers), 10))  # En fazla 10 tane
 
     # Kullanıcının başlangıç sorularını alın
-    starting_questions = StartingQuestion.objects.filter(user=request.user)
+    starting_questions_with_counts = [
+        {
+            'question': sq.question,
+            'total_subquestions': sq.question.get_total_subquestions_count()
+        }
+        for sq in StartingQuestion.objects.filter(user=request.user)
+    ]
 
     return render(request, 'core/user_homepage.html', {
-        'starting_questions': starting_questions,
+        'starting_questions_with_counts': starting_questions_with_counts,
         'all_questions': all_questions,
         'random_items': random_items,
     })
