@@ -28,9 +28,14 @@
 <script src="https://d3js.org/d3.v6.min.js"></script>
 
 <!-- Harita verilerini JavaScript'e aktarmak için -->
+<!-- Harita verilerini JavaScript'e aktarmak için -->
 <script id="question-nodes-data" type="application/json">
     {{ question_nodes|safe }}
 </script>
+<script>
+    var focusQuestionId = "{{ focus_question_id|default:'' }}";
+</script>
+
 
 {% endblock %}
 

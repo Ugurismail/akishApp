@@ -234,6 +234,7 @@ def get_user_color(user_id):
 
 @login_required
 def question_map(request):
+    question_id = request.GET.get('question_id', None)
     questions = Question.objects.all()
     nodes = {}
     links = []
@@ -298,7 +299,10 @@ def question_map(request):
         "nodes": list(nodes.values()),
         "links": links
     }
-    return render(request, 'core/question_map.html', {'question_nodes': json.dumps(question_nodes)})
+    return render(request, 'core/question_map.html', {
+        'question_nodes': json.dumps(question_nodes),
+        'focus_question_id': question_id,
+    })
 
 @login_required
 def user_homepage(request):

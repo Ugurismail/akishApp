@@ -92,6 +92,14 @@ body {
     background-color: #f0f0f0;
 }
 
+.bi-geo-alt-fill {
+    font-size: 1.2em;
+    color: #0d6efd; /* Bootstrap'ın birincil rengi */
+}
+
+.bi-geo-alt-fill:hover {
+    color: #0a58ca; /* Hover efekti için koyu ton */
+}
 /* Butonların Varsayılan Stilini Kaldırma */
 .vote-btn, .save-btn {
     background: none;

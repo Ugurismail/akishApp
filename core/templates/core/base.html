@@ -36,7 +36,7 @@
                 <!-- Ortadaki Arama Formu (Sadece Giriş Yapmış Kullanıcılar İçin) -->
                 {% if user.is_authenticated %}
                 <form class="d-flex mx-auto position-relative" style="width: 400px;">
-                    <input class="form-control me-2" type="search" id="search-input" placeholder="Soru Ara" aria-label="Search">
+                    <input class="form-control me-2" type="search" id="search-input" placeholder="Soru/Filozof Ara" aria-label="Search">
                     <div id="search-results" class="list-group position-absolute w-100"></div>
                 </form>
                 {% endif %}

@@ -7,7 +7,11 @@
     <div class="row">
         <!-- Soru Detayı -->
         <div class="col-md-9">
-            <h2>{{ question.question_text }}</h2>
+            <h2>{{ question.question_text }}
+                <a href="{% url 'question_map' %}?question_id={{ question.id }}" title="Haritada Gör">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </a>
+            </h2>
                 <!-- Soruya Oy Verme ve Kaydetme -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <!-- Sol Kısım: Oy Verme ve Kaydetme -->
@@ -221,30 +225,29 @@
                 {% endif %}
             </div>
         </div>
-
-                <ul class="list-group">
-                    {% if question.subquestions.all %}
-                        {% for subquestion in question.subquestions.all %}
-                        <li class="list-group-item">
+        <ul class="list-group">
+            {% if question.subquestions.all %}
+                {% for subquestion in question.subquestions.all %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
                             <a href="{% url 'question_detail' subquestion.id %}">
                                 {{ subquestion.question_text }}
                             </a>
-                            {% if subquestion.user == request.user %}
-                                <!-- Silme Butonu -->
-                                <a href="{% url 'delete_question' subquestion.id %}" class="text-danger ms-2" title="Alt Soruyu Sil">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
-                            {% endif %}
                             <br>
                             <small class="text-muted">
                                 <a href="{% url 'profile' subquestion.user.username %}">{{ subquestion.user.username }}</a>
                             </small>
-                        </li>
-                        {% endfor %}
-                    {% else %}
-                        <li class="list-group-item">Bu sorunun henüz alt sorusu yok.</li>
-                    {% endif %}
-                </ul>
+                        </div>
+                        <!-- Haritada Gör İkonu -->
+                        <a href="{% url 'question_map' %}?question_id={{ subquestion.id }}" title="Haritada Gör">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </a>
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li class="list-group-item">Bu sorunun henüz alt sorusu yok.</li>
+            {% endif %}
+        </ul>
             </div>
             <!-- İlgili Sorular veya Ek İçerik -->
             <!-- Buraya isteğe bağlı olarak başka içerikler ekleyebilirsiniz -->

@@ -4,34 +4,38 @@
 <div class="row">
     <!-- Sol Sütun: Bugünün Soruları -->
     <div class="col-md-8">
-        <h2>Bugün Girilen Sorular</h2>
-        {% if todays_questions %}
-            <ul>
-                {% for question in todays_questions %}
-                    <li>
-                        <a href="{% url 'question_detail' question.id %}">
-                            {{ question.question_text }}
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>Bugün bu sitede yeni soru sorulmamıştır.</p>
-        {% endif %}
-    </div>
-    <!-- Sağ Sütun: Başlangıç Sorularınız -->
-    <div class="col-md-4">
-        <h2>Başlangıç Sorularınız</h2>
-        <ul>
-            {% for starting_question in starting_questions %}
-                <li>
-                    <a href="{% url 'question_detail' starting_question.question.id %}">
-                        {{ starting_question.question.question_text }}
+        <!-- Bugün Sorulan Sorular -->
+        <h3>Bugün Sorulan Sorular</h3>
+        <ul class="list-group">
+            {% for question in todays_questions %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="{% url 'question_detail' question.id %}">
+                        {{ question.question_text }}
+                    </a>
+                    <!-- Haritada Gör İkonu -->
+                    <a href="{% url 'question_map' %}?question_id={{ question.id }}" title="Haritada Gör">
+                        <i class="bi bi-geo-alt-fill"></i>
                     </a>
                 </li>
             {% endfor %}
         </ul>
-        <a href="{% url 'add_starting_question' %}" class="btn btn-primary">Başlangıç Sorusu Ekle</a>
+    </div>
+    <!-- Sağ Sütun: Başlangıç Sorularınız -->
+    <div class="col-md-4">
+        <h3>Başlangıç Sorularınız</h3>
+        <ul class="list-group">
+            {% for starting_question in starting_questions %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="{% url 'question_detail' starting_question.question.id %}">
+                        {{ starting_question.question.question_text }}
+                    </a>
+                    <!-- Haritada Gör İkonu -->
+                    <a href="{% url 'question_map' %}?question_id={{ starting_question.question.id }}" title="Haritada Gör">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
 </div>
 {% endblock %}

@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Get the dimensions for the SVG
     var width = document.getElementById('chart').clientWidth;
-    var height = 800;
+    var height = 800; // İhtiyaçlarınıza göre ayarlayabilirsiniz
 
     // Create the SVG element with zoom and pan functionality
     var svg = d3.select("#chart")
@@ -32,9 +32,20 @@ document.addEventListener('DOMContentLoaded', function () {
         .attr("d", "M0,-5L10,0L0,5")
         .attr("fill", "#999");
 
+    // Define the zoom behavior and assign it to a variable
+    var zoom = d3.zoom()
+        .scaleExtent([0.05, 5]) // Allow zooming out more to see all nodes
+        .on("zoom", function (event) {
+            g.attr("transform", event.transform);
+            updateNodeVisibility(event.transform.k);
+        });
+
+    // Apply zoom behavior to the svg
+    svg.call(zoom);
+
     // Initialize the simulation
-    var simulation = d3.forceSimulation()
-        .force("link", d3.forceLink()
+    var simulation = d3.forceSimulation(questionData.nodes)
+        .force("link", d3.forceLink(questionData.links)
             .id(function (d) { return d.id; })
             .distance(150)
         )
@@ -44,7 +55,16 @@ document.addEventListener('DOMContentLoaded', function () {
         .force("center", d3.forceCenter(width / 2, height / 2))
         .force("collide", d3.forceCollide()
             .radius(function (d) { return d.size * 1.5; })
-        );
+        )
+        .on('end', function() {
+            if (focusQuestionId) {
+                var targetNode = questionData.nodes.find(node => node.question_id.toString() === focusQuestionId);
+                if (targetNode) {
+                    // Haritayı hedef düğüme yakınlaştırın
+                    zoomToNode(targetNode);
+                }
+            }
+        });
 
     // Create links
     var link = g.append("g")
@@ -65,9 +85,9 @@ document.addEventListener('DOMContentLoaded', function () {
         .attr("r", function (d) { return d.size; })
         .attr("fill", function (d) {
             if (d.users.length > 1) {
-                return "#A9A9A9"; // Gray color for shared questions
+                return "#A9A9A9"; // Ortak sorular için gri renk
             } else {
-                return d.color; // User-specific color
+                return d.color; // Kullanıcıya özel renk
             }
         })
         .on("click", function (event, d) {
@@ -89,17 +109,13 @@ document.addEventListener('DOMContentLoaded', function () {
         .attr("text-anchor", "middle")
         .text(function (d) { return d.label; })
         .style("font-size", function (d) {
-            // Base font size adjusted by the number of users
+            // Kullanıcı sayısına göre temel font boyutu
             return (12 + (d.users.length * 2)) + "px";
         });
 
     // Start the simulation
     simulation
-        .nodes(questionData.nodes)
         .on("tick", ticked);
-
-    simulation.force("link")
-        .links(questionData.links);
 
     // Ticking function to update positions
     function ticked() {
@@ -115,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         label
             .attr("x", function (d) { return d.x; })
-            .attr("y", function (d) { return d.y - d.size - 5; }); // Position label above the node
+            .attr("y", function (d) { return d.y - d.size - 5; }); // Etiketi düğümün üstüne yerleştirin
     }
 
     // Dragging functions
@@ -132,51 +148,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function dragended(event, d) {
         if (!event.active) simulation.alphaTarget(0);
-        // Uncomment the following lines if you want nodes to be free after dragging
+        // Düğümlerin serbest kalmasını istiyorsanız aşağıdaki satırları yorumdan çıkarın
         // d.fx = null;
         // d.fy = null;
     }
 
-    // Add zoom and pan functionality
-    svg.call(d3.zoom()
-        .scaleExtent([0.05, 5]) // Allow zooming out more to see all nodes
-        .on("zoom", function (event) {
-            g.attr("transform", event.transform);
-            updateNodeVisibility(event.transform.k);
-        })
-    );
-
     // Function to update node visibility based on zoom level
     function updateNodeVisibility(zoomLevel) {
         node.each(function(d) {
-            // Nodes with more users stay more visible when zoomed out
+            // Kullanıcı sayısına göre düğüm opaklığını ayarlayın
             var minOpacity = 0.8;
             var maxOpacity = 1;
             var userCountFactor = (d.users.length - 1) / (questionData.maxUserCount - 1) || 0;
             var opacity = minOpacity + (maxOpacity - minOpacity) * userCountFactor;
     
-            // Adjust opacity based on zoom level
+            // Zoom seviyesine göre opaklığı ayarlayın
             if (zoomLevel < 0.5) {
-                opacity = opacity * zoomLevel * 2; // Fade out less important nodes
+                opacity = opacity * zoomLevel * 2; // Daha az önemli düğümleri soluklaştırın
             }
-            d.opacity = opacity; // Store the computed opacity in data
+            d.opacity = opacity; // Hesaplanan opaklığı veriye kaydedin
     
-            // Apply opacity to the node
+            // Düğümün opaklığını uygulayın
             d3.select(this).style("opacity", d.opacity);
         });
     
         label.each(function(d) {
-            // Labels follow the same opacity as their nodes
+            // Etiketler düğümlerle aynı opaklığa sahip olsun
             d3.select(this).style("opacity", d.opacity);
         });
     
         label.style("font-size", function(d) {
-            // Adjust font size based on zoom level and user count
+            // Zoom seviyesi ve kullanıcı sayısına göre font boyutunu ayarlayın
             var baseSize = 12 + (d.users.length * 2);
             return baseSize * zoomLevel + "px";
         });
     }
-    
 
     // Compute the maximum number of users for any question
     questionData.maxUserCount = d3.max(questionData.nodes, function(d) { return d.users.length; }) || 1;
@@ -217,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
         questionData = newData;
 
         // Recalculate maxUserCount
-        questionData.maxUserCount = d3.max(questionData.nodes, function (d) { return d.users.length; });
+        questionData.maxUserCount = d3.max(questionData.nodes, function (d) { return d.users.length; }) || 1;
 
         // Recreate links
         link = g.append("g")
@@ -265,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return (12 + (d.users.length * 2)) + "px";
             });
 
-        // Restart the simulation
+        // Restart the simulation with new data
         simulation.nodes(questionData.nodes);
         simulation.force("link").links(questionData.links);
         simulation.alpha(1).restart();
@@ -317,4 +323,14 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('user-search-results').style.display = 'none';
         }
     });
+
+    // Function to zoom to a specific node
+    function zoomToNode(node) {
+        var scale = 1.5; // Yakınlaştırma ölçeği
+        var x = -node.x * scale + width / 2;
+        var y = -node.y * scale + height / 2;
+        svg.transition()
+            .duration(750)
+            .call(zoom.transform, d3.zoomIdentity.translate(x, y).scale(scale));
+    }
 });
