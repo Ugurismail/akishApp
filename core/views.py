@@ -637,21 +637,31 @@ def user_homepage(request):
     all_answers = Answer.objects.select_related('question').all()
     random_items = random.sample(list(all_answers), min(len(all_answers), 10))  # En fazla 10 tane
 
+    # Kullanıcının kaydettiği yanıtların ID'lerini al
+    saved_answer_ids = SavedItem.objects.filter(user=request.user, answer__in=random_items).values_list('answer__id', flat=True)
+
+    # Yanıtlar için kaydedilme sayıları
+    answer_save_counts = SavedItem.objects.filter(answer__in=random_items).values('answer_id').annotate(count=Count('id'))
+    answer_save_dict = {item['answer_id']: item['count'] for item in answer_save_counts}
+
     # Kullanıcının başlangıç sorularını alın
+    starting_questions = StartingQuestion.objects.filter(user=request.user)
     starting_questions_with_counts = [
         {
             'question': sq.question,
             'total_subquestions': sq.question.get_total_subquestions_count()
         }
-        for sq in StartingQuestion.objects.filter(user=request.user)
+        for sq in starting_questions
     ]
 
-    return render(request, 'core/user_homepage.html', {
+    context = {
         'starting_questions_with_counts': starting_questions_with_counts,
         'all_questions': all_questions,
         'random_items': random_items,
-    })
-
+        'saved_answer_ids': list(saved_answer_ids),
+        'answer_save_dict': answer_save_dict,
+    }
+    return render(request, 'core/user_homepage.html', context)
 
 
 def about(request):
@@ -883,19 +893,25 @@ def grant_invitation_quota(request):
         form = GrantQuotaForm()
     return render(request, 'core/grant_invitation_quota.html', {'form': form})
 
+
+
+
+@login_required
 def single_answer(request, question_id, answer_id):
     question = get_object_or_404(Question, id=question_id)
     answer = get_object_or_404(Answer, id=answer_id, question=question)
-    show_all = request.GET.get('show_all')
-
-    if show_all:
-        answers = question.answers.all()
-    else:
-        answers = [answer]
-
+    
+    # Kullanıcının kaydettiği yanıtların ID'lerini al
+    saved_answer_ids = SavedItem.objects.filter(user=request.user, answer=answer).values_list('answer__id', flat=True)
+    
+    # Yanıt için kaydedilme sayısını al
+    answer_save_counts = SavedItem.objects.filter(answer=answer).values('answer_id').annotate(count=Count('id'))
+    answer_save_dict = {item['answer_id']: item['count'] for item in answer_save_counts}
+    
     context = {
         'question': question,
-        'answers': answers,
-        'single_answer_view': True,
+        'answers': [answer],
+        'saved_answer_ids': list(saved_answer_ids),
+        'answer_save_dict': answer_save_dict,
     }
     return render(request, 'core/single_answer.html', context)
