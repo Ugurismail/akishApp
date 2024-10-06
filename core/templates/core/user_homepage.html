@@ -83,6 +83,7 @@
         <!-- Sağ Taraf: Başlangıç Sorularınız -->
         <div class="col-md-3" style="border-left: 1px solid #ccc;">
             <h4>Başlangıç Sorularınız</h4>
+            <a href="{% url 'add_starting_question' %}" class="btn btn-primary mb-2">Başlangıç Sorusu Ekle</a>            
             <ul class="list-unstyled">
                 {% for item in starting_questions_with_counts %}
                 <li class="d-flex justify-content-between align-items-center">
