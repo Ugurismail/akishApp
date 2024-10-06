@@ -18,8 +18,8 @@
                 </li>
                 {% endfor %}
             </ul>
+            {% include 'core/pagination.html' with page_obj=all_questions page_param='page' %}
         </div>
-
         <!-- Middle Column: Random Questions and Answers -->
         <div class="col-md-7">
             <h4>Rastgele Sorular ve Yanıtlar</h4>
@@ -121,14 +121,14 @@
         <!-- Right Column: Your Starting Questions -->
         <div class="col-md-3" style="border-left: 1px solid #ccc;">
             <h4>Başlangıç Sorularınız</h4>
-            {% if starting_questions_with_counts %}
+            {% if starting_questions %}
                 <ul class="list-unstyled">
-                    {% for item in starting_questions_with_counts %}
+                    {% for item in starting_questions %}
                     <li class="d-flex justify-content-between align-items-center">
                         <a href="{% url 'question_detail' item.question.id %}" class="text-dark text-decoration-none">
                             {{ item.question.question_text }}
                         </a>
-                        <span class="badge bg-primary rounded-pill">{{ item.total_subquestions }}</span>
+                        <span>{{ item.total_subquestions }}</span>
                     </li>
                     {% endfor %}
                 </ul>
@@ -137,7 +137,9 @@
             {% endif %}
             <!-- "Başlangıç Sorusu Ekle" Butonu -->
             <a href="{% url 'add_starting_question' %}" class="btn btn-primary mt-2">Başlangıç Sorusu Ekle</a>
+            {% include 'core/pagination.html' with page_obj=starting_questions page_param='starting_page' %}
         </div>
+        
     </div>
 </div>
 {% endblock %}

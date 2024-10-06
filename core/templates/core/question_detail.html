@@ -7,11 +7,15 @@
     <div class="row">
         <!-- Soru Detayı -->
         <div class="col-md-9">
-            <h2>{{ question.question_text }}
-                <a href="{% url 'question_map' %}?question_id={{ question.id }}" title="Haritada Gör">
-                    <i class="bi bi-geo-alt-fill"></i>
-                </a>
-            </h2>
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>{{ question.question_text }}
+                    <a href="{% url 'question_map' %}?question_id={{ question.id }}" title="Haritada Gör">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </a>
+                </h2>
+            </div>
+            {% include 'core/pagination.html' with page_obj=answers page_param='page' %}
+            
                 <!-- Soruya Oy Verme ve Kaydetme -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <!-- Sol Kısım: Oy Verme ve Kaydetme -->
@@ -148,9 +152,11 @@
                     </div>
                 </div>
             </div>
+            
             {% empty %}
             <p>Henüz yanıt yok. İlk yanıtı siz verin!</p>
             {% endfor %}
+
             <!-- Yanıt Ekleme Formu -->
             <div class="card mt-4">
                 <div class="card-body answer-arkaRenk">
@@ -180,6 +186,8 @@
                 </div>
             </div>
         </div>
+
+
         <!-- Sağ Sütun: Alt Sorular ve İlgili Sorular -->
         <div class="col-md-3">
             <!-- Alt Sorular -->
@@ -240,7 +248,7 @@
                         </div>
                         <!-- Haritada Gör İkonu -->
                         <a href="{% url 'question_map' %}?question_id={{ subquestion.id }}" title="Haritada Gör">
-                            <i class="bi bi-geo-alt-fill"></i>
+                            <i class="bi bi-geo-alt"></i>
                         </a>
                     </li>
                 {% endfor %}
@@ -284,6 +292,8 @@
 <!-- Modals -->
 {% include 'core/link_modal.html' %}
 {% include 'core/reference_modal.html' %}
+{% include 'core/pagination.html' with page_obj=answers page_param='page' %}
+
 
 {% endblock %}
 

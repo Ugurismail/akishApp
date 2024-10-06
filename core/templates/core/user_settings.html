@@ -1,0 +1,83 @@
+<!-- templates/core/user_settings.html -->
+
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Renk Ayarlarınızı Düzenleyin</h2>
+    <form method="post">
+        {% csrf_token %}
+        <!-- Genel Renkler -->
+        <div class="card p-3 mb-3">
+            <h4>Genel Renkler</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="background_color" class="form-label">Arka Plan Rengi:</label>
+                    <input type="color" id="background_color" name="background_color" class="form-control form-control-color" value="{{ user_profile.background_color }}" oninput="updateColor('--background-color', this.value)">
+                    <small class="form-text text-muted">Tüm sayfanın arka plan rengini değiştirir.</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="text_color" class="form-label">Yazı Rengi:</label>
+                    <input type="color" id="text_color" name="text_color" class="form-control form-control-color" value="{{ user_profile.text_color }}" oninput="updateColor('--text-color', this.value)">
+                    <small class="form-text text-muted">Genel metinlerin rengini değiştirir.</small>
+                </div>
+            </div>
+        </div>
+        <!-- Navbar Renkleri -->
+        <div class="card p-3 mb-3">
+            <h4>Navbar Renkleri</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="header_background_color" class="form-label">Navbar Arka Plan Rengi:</label>
+                    <input type="color" id="header_background_color" name="header_background_color" class="form-control form-control-color" value="{{ user_profile.header_background_color }}" oninput="updateColor('--header-background-color', this.value)">
+                    <small class="form-text text-muted">Navbar'ın arka plan rengini değiştirir.</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="header_text_color" class="form-label">Navbar Yazı Rengi:</label>
+                    <input type="color" id="header_text_color" name="header_text_color" class="form-control form-control-color" value="{{ user_profile.header_text_color }}" oninput="updateColor('--header-text-color', this.value)">
+                    <small class="form-text text-muted">Navbar'daki metinlerin rengini değiştirir.</small>
+                </div>
+            </div>
+        </div>
+        <div class="card p-3 mb-3">
+            <div class="row">
+                <div class="col-md-6 mb-3">            <label for="button_background_color" class="form-label">Buton Arka Plan Rengi:</label>
+                    <input type="color" id="button_background_color" name="button_background_color" class="form-control form-control-color" value="{{ user_profile.button_background_color }}">
+                    <small class="form-text text-muted">Bu seçim butonların arka plan rengini değiştirir.</small></div>
+                <div class="col-md-6 mb-3">            <label for="answer_background_color" class="form-label">Cevap Arka Plan Rengi:</label>
+                    <input type="color" id="answer_background_color" name="answer_background_color" class="form-control form-control-color" value="{{ user_profile.answer_background_color }}">
+                    <small class="form-text text-muted">Bu seçim cevapların arka plan rengini değiştirir.</small></div>
+            </div>
+        </div>
+        <div class="card p-3 mb-3">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="header_text_color" class="form-label">Başlık Yazı Rengi:</label>
+                    <input type="color" id="header_text_color" name="header_text_color" class="form-control form-control-color" value="{{ user_profile.header_text_color }}">
+                    <small class="form-text text-muted">Bu seçim navbar'daki metinlerin rengini değiştirir.</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="link_color" class="form-label">Link Rengi:</label>
+                    <input type="color" id="link_color" name="link_color" class="form-control form-control-color" value="{{ user_profile.link_color }}">
+                    <small class="form-text text-muted">Bu seçim linklerin rengini değiştirir.</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="button_text_color" class="form-label">Buton Yazı Rengi:</label>
+                    <input type="color" id="button_text_color" name="button_text_color" class="form-control form-control-color" value="{{ user_profile.button_text_color }}">
+                    <small class="form-text text-muted">Bu seçim butonların yazı rengini değiştirir.</small>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+        <button type="submit" name="reset" value="true" class="btn btn-secondary">Varsayılanlara Dön</button>
+    </form>
+</div>
+
+</div> 
+{% endblock %}
+<script>
+    function updateColor(variable, value) {
+        document.documentElement.style.setProperty(variable, value);
+    }
+    </script>
+    

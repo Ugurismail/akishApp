@@ -86,11 +86,19 @@ class Answer(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    color = models.CharField(max_length=7, default='#000000')
     invitation_quota = models.PositiveIntegerField(default=0)
+    background_color = models.CharField(max_length=7, default='#F5F5F5')
+    text_color = models.CharField(max_length=7, default='#000000')
+    header_background_color = models.CharField(max_length=7, default='#ffffff')
+    header_text_color = models.CharField(max_length=7, default='#333333')
+    link_color = models.CharField(max_length=7, default='#0d6efd')  # Yeni alan
+    button_background_color = models.CharField(max_length=7, default='#007bff')  # Yeni alan
+    button_text_color = models.CharField(max_length=7, default='#ffffff')  # Yeni alan
+    answer_background_color = models.CharField(max_length=7, default='#F5F5F5')
+    # Diğer renk alanlarını ekleyebilirsiniz
 
     def __str__(self):
-        return f"{self.user.username} Profili"
+        return f"{self.user.username} adlı arkadaşın profili."
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

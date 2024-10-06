@@ -2,17 +2,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import Question, Answer, StartingQuestion, SavedItem, Vote
-from .forms import QuestionForm, AnswerForm, StartingQuestionForm, SignupForm, LoginForm, WordUsageForm,InvitationForm
+from .models import Question, Answer, StartingQuestion, SavedItem, Vote, Invitation, UserProfile,Message, UserProfile
+from .forms import QuestionForm, AnswerForm, StartingQuestionForm, SignupForm, LoginForm, WordUsageForm, InvitationForm,MessageForm
 from django.http import JsonResponse
 from django.db.models import Q,Count, Max
 from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
 from collections import defaultdict
-from .models import Message
-from .forms import MessageForm
-from .models import Invitation, UserProfile
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
@@ -20,6 +17,8 @@ from collections import Counter
 import colorsys, re, json
 import random
 from django.db.models.functions import Coalesce
+from django.core.paginator import Paginator
+
 
 
 def signup(request):
@@ -145,25 +144,30 @@ def profile(request, username=None):
 
 @login_required
 def question_detail(request, question_id):
-    # Soru ve ilgili verileri al
+    # Retrieve question and related data
     question = get_object_or_404(Question, id=question_id)
-    answers = Answer.objects.filter(question=question).order_by('created_at')
+    answers_list = Answer.objects.filter(question=question).order_by('created_at')
     subquestions = question.subquestions.all()
 
-    # Kullanıcı soruyu kaydetmiş mi?
+    # Paginate answers
+    paginator = Paginator(answers_list, 5)  # 5 answers per page
+    page_number = request.GET.get('page')
+    answers_page_obj = paginator.get_page(page_number)
+
+    # Check if the user has saved the question
     user_has_saved_question = SavedItem.objects.filter(user=request.user, question=question).exists()
 
-    # Soru için kaydedilme sayısı
+    # Count how many times the question has been saved
     question_save_count = SavedItem.objects.filter(question=question).count()
 
-    # Yanıtlar için kaydedilme sayıları
-    answer_save_counts = SavedItem.objects.filter(answer__in=answers).values('answer_id').annotate(count=Count('id'))
+    # Get save counts for paginated answers
+    answer_save_counts = SavedItem.objects.filter(answer__in=answers_page_obj).values('answer_id').annotate(count=Count('id'))
     answer_save_dict = {item['answer_id']: item['count'] for item in answer_save_counts}
 
-    # Kullanıcının kaydettiği yanıtların ID'lerini al
-    saved_answer_ids = SavedItem.objects.filter(user=request.user, answer__in=answers).values_list('answer__id', flat=True)
+    # Get IDs of answers saved by the user
+    saved_answer_ids = SavedItem.objects.filter(user=request.user, answer__in=answers_page_obj).values_list('answer__id', flat=True)
 
-    # Yanıt ekleme formu
+    # Answer form
     form = AnswerForm(request.POST or None)
     if request.method == 'POST':
         if form.is_valid():
@@ -176,11 +180,11 @@ def question_detail(request, question_id):
 
     context = {
         'question': question,
-        'answers': answers,
+        'answers': answers_page_obj,  # Use paginated answers here
         'subquestions': subquestions,
         'form': form,
         'user_has_saved_question': user_has_saved_question,
-        'saved_answer_ids': saved_answer_ids,
+        'saved_answer_ids': list(saved_answer_ids),
         'answer_save_dict': answer_save_dict,
         'question_save_count': question_save_count,
     }
@@ -625,38 +629,47 @@ def search_questions(request):
 
 @login_required
 def user_homepage(request):
-    # Tüm soruları alın ve yanıt sayılarını hesaplayın
-    all_questions = Question.objects.annotate(
+    # All questions
+    all_questions_list = Question.objects.annotate(
         answers_count=Count('answers'),
         latest_answer_date=Max('answers__created_at')
     ).annotate(
         last_activity=Coalesce('latest_answer_date', 'created_at')
     ).order_by('-last_activity')
 
-    # Rastgele yanıtları alın
-    all_answers = Answer.objects.select_related('question').all()
-    random_items = random.sample(list(all_answers), min(len(all_answers), 10))  # En fazla 10 tane
+    # Paginate all questions
+    all_questions_paginator = Paginator(all_questions_list, 5)  # Sayfa başına 5 soru
+    page_number = request.GET.get('page')
+    all_questions_page_obj = all_questions_paginator.get_page(page_number)
 
-    # Kullanıcının kaydettiği yanıtların ID'lerini al
-    saved_answer_ids = SavedItem.objects.filter(user=request.user, answer__in=random_items).values_list('answer__id', flat=True)
-
-    # Yanıtlar için kaydedilme sayıları
-    answer_save_counts = SavedItem.objects.filter(answer__in=random_items).values('answer_id').annotate(count=Count('id'))
-    answer_save_dict = {item['answer_id']: item['count'] for item in answer_save_counts}
-
-    # Kullanıcının başlangıç sorularını alın
-    starting_questions = StartingQuestion.objects.filter(user=request.user)
+    # Starting questions
+    starting_questions_list = StartingQuestion.objects.filter(user=request.user)
     starting_questions_with_counts = [
         {
             'question': sq.question,
             'total_subquestions': sq.question.get_total_subquestions_count()
         }
-        for sq in starting_questions
+        for sq in starting_questions_list
     ]
 
+    # Paginate starting questions
+    starting_questions_paginator = Paginator(starting_questions_with_counts, 5)
+    starting_page_number = request.GET.get('starting_page')
+    starting_questions_page_obj = starting_questions_paginator.get_page(starting_page_number)
+
+    # Random answers
+    random_items = random.sample(list(Answer.objects.select_related('question')), min(10, Answer.objects.count()))
+
+    # User's saved answer IDs
+    saved_answer_ids = SavedItem.objects.filter(user=request.user, answer__in=random_items).values_list('answer__id', flat=True)
+
+    # Answer save counts
+    answer_save_counts = SavedItem.objects.filter(answer__in=random_items).values('answer_id').annotate(count=Count('id'))
+    answer_save_dict = {item['answer_id']: item['count'] for item in answer_save_counts}
+
     context = {
-        'starting_questions_with_counts': starting_questions_with_counts,
-        'all_questions': all_questions,
+        'starting_questions': starting_questions_page_obj,
+        'all_questions': all_questions_page_obj,  # Sayfalandırılmış all_questions
         'random_items': random_items,
         'saved_answer_ids': list(saved_answer_ids),
         'answer_save_dict': answer_save_dict,
@@ -893,9 +906,6 @@ def grant_invitation_quota(request):
         form = GrantQuotaForm()
     return render(request, 'core/grant_invitation_quota.html', {'form': form})
 
-
-
-
 @login_required
 def single_answer(request, question_id, answer_id):
     question = get_object_or_404(Question, id=question_id)
@@ -915,3 +925,35 @@ def single_answer(request, question_id, answer_id):
         'answer_save_dict': answer_save_dict,
     }
     return render(request, 'core/single_answer.html', context)
+
+@login_required
+def user_settings(request):
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        if 'reset' in request.POST:
+            # Varsayılan değerlere dön
+            profile.background_color = '#F5F5F5'
+            profile.text_color = '#000000'
+            profile.header_background_color = '#ffffff'
+            profile.header_text_color = '#333333'
+            profile.link_color = '#0d6efd'
+            profile.button_background_color = '#007bff'
+            profile.button_text_color = '#ffffff'
+            # Diğer renk alanlarını da varsayılan değerlere ayarlayın
+            profile.save()
+            messages.success(request, 'Renk ayarlarınız varsayılan değerlere döndürüldü.')
+            return redirect('user_settings')
+        else:
+            profile.background_color = request.POST.get('background_color', '#F5F5F5')
+            profile.answer_background_color = request.POST.get('answer_background_color', '#F5F5F5')
+            profile.text_color = request.POST.get('text_color', '#000000')
+            profile.header_background_color = request.POST.get('header_background_color', '#ffffff')
+            profile.header_text_color = request.POST.get('header_text_color', '#333333')
+            profile.link_color = request.POST.get('link_color', '#0d6efd')
+            profile.button_background_color = request.POST.get('button_background_color', '#007bff')
+            profile.button_text_color = request.POST.get('button_text_color', '#ffffff')
+            # Diğer renk alanlarını da ekleyin
+            profile.save()
+            messages.success(request, 'Renk ayarlarınız güncellendi.')
+            return redirect('user_settings')
+    return render(request, 'core/user_settings.html', {'user_profile': profile})

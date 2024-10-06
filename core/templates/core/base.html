@@ -15,9 +15,39 @@
 />
     <!-- Özel CSS -->
     <link rel="stylesheet" href="{% static 'core/css/styles.css' %}">
+    {% if user.is_authenticated %}
+    <style>
+        :root {
+            --background-color: {{ user_profile.background_color|default:'#F5F5F5' }};
+            --text-color: {{ user_profile.text_color|default:'#000000' }};
+            --header-background-color: {{ user_profile.header_background_color|default:'#ffffff' }};
+            --header-text-color: {{ user_profile.header_text_color|default:'#333333' }};
+            --link-color: {{ user_profile.link_color|default:'#0d6efd' }};
+            --button-background-color: {{ user_profile.button_background_color|default:'#007bff' }};
+            --button-text-color: {{ user_profile.button_text_color|default:'#ffffff' }};
+            --answer-background-color: {{ user_profile.answer_background_color|default:'#F5F5F5' }};
+            /* Diğer renk değişkenleri */
+        }
+    </style>
+{% else %}
+    <style>
+        :root {
+            --background-color: #F5F5F5;
+            --text-color: #000000;
+            --header-background-color: #ffffff;
+            --header-text-color: #333333;
+            --link-color: #0d6efd;
+            --button-background-color: #007bff;
+            --button-text-color: #ffffff;
+            /* Diğer varsayılan renkler */
+        }
+    </style>
+{% endif %}
+
     <link rel="icon" href="{% static 'core/favicon.ico' %}" type="image/x-icon">
     <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
+    
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNavbar">
@@ -70,6 +100,12 @@
                                 <a class="dropdown-item" href="{% url 'about' %}">
                                     <i class="bi bi-info-circle"></i>
                                     Hakkında
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'user_settings' %}">
+                                    <i class="bi bi-gear"></i>
+                                Ayarlar
                                 </a>
                             </li>
                             <li>
