@@ -52,7 +52,7 @@
                 </div>
             <!-- Yanıtlar -->
             {% for answer in answers %}
-            <div class="mb-3 mt-2 answer" id="answer-{{ answer.id }}">
+            <div class="card-body mb-3 mt-2 answer" id="answer-{{ answer.id }}">
                 <!-- Yanıt Metni -->
                 {% if answer.answer_text|length > 500 %}
                     <!-- Kısaltılmış Yanıt -->

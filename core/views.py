@@ -191,6 +191,9 @@ def question_detail(request, question_id):
     return render(request, 'core/question_detail.html', context)
 
 
+def custom_error(request, exception=None):
+    return render(request, 'core/error.html', status=500)
+
 @login_required
 def add_question(request):
     if request.method == 'POST':
@@ -926,6 +929,11 @@ def single_answer(request, question_id, answer_id):
     }
     return render(request, 'core/single_answer.html', context)
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import UserProfile
+
 @login_required
 def user_settings(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
@@ -939,20 +947,32 @@ def user_settings(request):
             profile.link_color = '#0d6efd'
             profile.button_background_color = '#007bff'
             profile.button_text_color = '#ffffff'
-            # Diğer renk alanlarını da varsayılan değerlere ayarlayın
+            profile.answer_background_color = '#F5F5F5'
+            profile.content_background_color = '#ffffff'
+            profile.tab_background_color = '#f8f9fa'
+            profile.tab_text_color = '#000000'
+            profile.tab_active_background_color = '#ffffff'
+            profile.tab_active_text_color = '#000000'
+            # Diğer renk alanlarını varsayılan değerlere ayarlayın
             profile.save()
             messages.success(request, 'Renk ayarlarınız varsayılan değerlere döndürüldü.')
             return redirect('user_settings')
         else:
+            # Formdan gelen değerleri kaydet
             profile.background_color = request.POST.get('background_color', '#F5F5F5')
-            profile.answer_background_color = request.POST.get('answer_background_color', '#F5F5F5')
             profile.text_color = request.POST.get('text_color', '#000000')
             profile.header_background_color = request.POST.get('header_background_color', '#ffffff')
             profile.header_text_color = request.POST.get('header_text_color', '#333333')
             profile.link_color = request.POST.get('link_color', '#0d6efd')
             profile.button_background_color = request.POST.get('button_background_color', '#007bff')
             profile.button_text_color = request.POST.get('button_text_color', '#ffffff')
-            # Diğer renk alanlarını da ekleyin
+            profile.answer_background_color = request.POST.get('answer_background_color', '#F5F5F5')
+            profile.content_background_color = request.POST.get('content_background_color', '#ffffff')
+            profile.tab_background_color = request.POST.get('tab_background_color', '#f8f9fa')
+            profile.tab_text_color = request.POST.get('tab_text_color', '#000000')
+            profile.tab_active_background_color = request.POST.get('tab_active_background_color', '#ffffff')
+            profile.tab_active_text_color = request.POST.get('tab_active_text_color', '#000000')
+            # Diğer renk alanlarını ekleyin
             profile.save()
             messages.success(request, 'Renk ayarlarınız güncellendi.')
             return redirect('user_settings')

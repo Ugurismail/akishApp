@@ -24,10 +24,7 @@ ALLOWED_HOSTS = ['*']
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-^i!wim+h#ei$c0@okoucmpt7wer1gmd@_$q#3!-g&+)dy3q&4m'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
 # settings.py
 LOGIN_REDIRECT_URL = '/profile/'
 

@@ -7,7 +7,52 @@
     --hover-background-color: #f0f0f0;
     --nav-link-hover-color: #007bff;
     --nav-link-hover-bg: rgba(0, 0, 0, 0.05);
+    --content-background-color: #ffffff; 
+    --tab-background-color: #f8f9fa; /* Varsayılan açık gri */
+    --tab-text-color: #000000;
+    --tab-active-background-color: #ffffff;
+    --tab-active-text-color: #000000;
+    --dropdown-text-color: #333333;
+    --dropdown-hover-background-color: #f2f2f2;
+    --dropdown-hover-text-color: #0056b3;
+    --button-hover-background-color: #0056b3;
+    
     /* Diğer değişkenler */
+}
+
+.question,
+.answer {
+    background-color: var(--content-background-color);
+    /* Diğer stiller */
+}
+.nav-tabs .nav-link {
+    background-color: var(--tab-background-color);
+    color: var(--tab-text-color);
+}
+
+.nav-tabs .nav-link.active {
+    background-color: var(--tab-active-background-color);
+    color: var(--tab-active-text-color);
+}
+.dropdown-menu {
+    background-color: var(--dropdown-background-color);
+    color: var(--dropdown-text-color);
+}
+
+.dropdown-menu .dropdown-item:hover {
+    background-color: var(--dropdown-hover-background-color);
+    color: var(--dropdown-hover-text-color);
+}
+
+/* Pagination Stilleri */
+.pagination .page-link {
+    background-color: var(--pagination-background-color);
+    color: var(--pagination-text-color);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--pagination-active-background-color);
+    color: var(--pagination-active-text-color);
 }
 
 /* Body Styles */
@@ -45,7 +90,7 @@ a:hover {
 }
 
 .btn-primary:hover {
-    background-color: darken(var(--button-background-color), 10%);
+    background-color: darken(red, 10%);
     border-color: darken(var(--button-background-color), 10%);
     color: var(--button-text-color);
 }
@@ -59,8 +104,8 @@ a:hover {
 }
 
 .navbar-transparent {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.01) !important;
+    backdrop-filter: blur(5px);
 }
 
 .navbar .navbar-brand,
@@ -68,7 +113,7 @@ a:hover {
 .navbar .dropdown-toggle {
     color: var(--header-text-color) !important;
     text-decoration: none !important;
-    transition: color 0.3s ease, background-color 0.3s ease;
+    transition: color 0.3s ease, var(--background-color) 0.3s ease;
 }
 .navbar .nav-link:hover,
 .navbar .dropdown-toggle:hover {
@@ -76,15 +121,19 @@ a:hover {
     background-color: var(--nav-link-hover-bg);
 }
 
+.navbar .dropdown-menu {
+    background-color: var(--header-background-color);
+    color: var(--header-text-color);
+    border: none; /* İsteğe bağlı: Kenarlıkları kaldırmak için */
+}
+
 .navbar .dropdown-menu .dropdown-item {
-    color: #333;
-    text-decoration: none;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    color: var(--header-text-color);
 }
 
 .navbar .dropdown-menu .dropdown-item:hover {
-    background-color: #f2f2f2;
-    color: #0056b3;
+    background-color: var(--link-color);
+    color: #fff; /* Veya istediğiniz bir renk */
 }
 
 /* Navbar Brand Hover State */
@@ -193,7 +242,7 @@ a.text-dark:hover {
 
 /* Answers Styling */
 .answer {
-    padding: 5% 0 15px;
+    padding: 3% 3% 15px;
     border-bottom: 1px solid #ddd;
 }
 

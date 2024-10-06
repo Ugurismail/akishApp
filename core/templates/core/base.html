@@ -26,24 +26,19 @@
             --button-background-color: {{ user_profile.button_background_color|default:'#007bff' }};
             --button-text-color: {{ user_profile.button_text_color|default:'#ffffff' }};
             --answer-background-color: {{ user_profile.answer_background_color|default:'#F5F5F5' }};
+            --content-background-color: {{ user_profile.content_background_color|default:'#ffffff' }};
+            --tab-background-color: {{ user_profile.tab_background_color|default:'#f8f9fa' }};
+            --tab-text-color: {{ user_profile.tab_text_color|default:'#000000' }};
+            --tab-active-background-color: {{ user_profile.tab_active_background_color|default:'#ffffff' }};
+            --tab-active-text-color: {{ user_profile.tab_active_text_color|default:'#000000' }};
+            --dropdown-text-color: {{ user_profile.dropdown_text_color|default:'#333333' }};
+            --dropdown-hover-background-color: {{ user_profile.dropdown_hover_background_color|default:'#f2f2f2' }};
+            --dropdown-hover-text-color: {{ user_profile.dropdown_hover_text_color|default:'#0056b3' }};
+            --button-hover-background-color: {{ user_profile.button_hover_background_color|default:'#0056b3' }};
             /* Diğer renk değişkenleri */
         }
     </style>
-{% else %}
-    <style>
-        :root {
-            --background-color: #F5F5F5;
-            --text-color: #000000;
-            --header-background-color: #ffffff;
-            --header-text-color: #333333;
-            --link-color: #0d6efd;
-            --button-background-color: #007bff;
-            --button-text-color: #ffffff;
-            /* Diğer varsayılan renkler */
-        }
-    </style>
 {% endif %}
-
     <link rel="icon" href="{% static 'core/favicon.ico' %}" type="image/x-icon">
     <meta name="csrf-token" content="{{ csrf_token }}">
 </head>

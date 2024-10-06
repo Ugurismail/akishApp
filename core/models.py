@@ -84,6 +84,7 @@ class Answer(models.Model):
     class Meta:
         ordering = ['created_at']
 
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     invitation_quota = models.PositiveIntegerField(default=0)
@@ -91,14 +92,23 @@ class UserProfile(models.Model):
     text_color = models.CharField(max_length=7, default='#000000')
     header_background_color = models.CharField(max_length=7, default='#ffffff')
     header_text_color = models.CharField(max_length=7, default='#333333')
-    link_color = models.CharField(max_length=7, default='#0d6efd')  # Yeni alan
-    button_background_color = models.CharField(max_length=7, default='#007bff')  # Yeni alan
-    button_text_color = models.CharField(max_length=7, default='#ffffff')  # Yeni alan
+    link_color = models.CharField(max_length=7, default='#0d6efd')
+    button_background_color = models.CharField(max_length=7, default='#007bff')
+    button_text_color = models.CharField(max_length=7, default='#ffffff')
     answer_background_color = models.CharField(max_length=7, default='#F5F5F5')
-    # Diğer renk alanlarını ekleyebilirsiniz
+    content_background_color = models.CharField(max_length=7, default='#ffffff')
+    tab_background_color = models.CharField(max_length=7, default='#f8f9fa')
+    tab_text_color = models.CharField(max_length=7, default='#000000')
+    tab_active_background_color = models.CharField(max_length=7, default='#ffffff')
+    tab_active_text_color = models.CharField(max_length=7, default='#000000')
+    dropdown_text_color = models.CharField(max_length=7, default='#333333')
+    dropdown_hover_background_color = models.CharField(max_length=7, default='#f2f2f2')
+    dropdown_hover_text_color = models.CharField(max_length=7, default='#0056b3')
+    button_hover_background_color = models.CharField(max_length=7, default='#0056b3')
 
     def __str__(self):
         return f"{self.user.username} adlı arkadaşın profili."
+
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
