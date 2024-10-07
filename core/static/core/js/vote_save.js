@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Save buttons
+   // Save buttons
     const saveButtons = document.querySelectorAll('.save-btn');
 
     saveButtons.forEach(btn => {
@@ -69,6 +69,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const contentType = this.getAttribute('data-content-type');
             const objectId = this.getAttribute('data-object-id');
             const icon = this.querySelector('i');
+            const saveCountSpan = this.nextElementSibling; // Kaydetme sayısını gösteren <span>
+
+            // Debugging için konsol logları
+            console.log('Kaydetme butonuna tıklandı');
+            console.log('Content Type:', contentType);
+            console.log('Object ID:', objectId);
+            console.log('Icon:', icon);
+            console.log('Save Count Span:', saveCountSpan);
 
             fetch('/save-item/', {
                 method: 'POST',
@@ -85,12 +93,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
+                console.log('Sunucudan dönen veri:', data);
                 if (data.status === 'saved') {
                     icon.classList.remove('bi-bookmark');
                     icon.classList.add('bi-bookmark-fill');
                 } else if (data.status === 'removed') {
                     icon.classList.remove('bi-bookmark-fill');
                     icon.classList.add('bi-bookmark');
+                }
+                // Kaydetme sayısını güncelle
+                if (data.save_count !== undefined) {
+                    saveCountSpan.innerText = data.save_count;
+                    console.log('Kaydetme sayısı güncellendi:', data.save_count);
+                } else {
+                    console.log('Sunucudan save_count değeri gelmedi.');
                 }
             })
             .catch(error => {

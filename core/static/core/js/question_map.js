@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
         node.each(function(d) {
             // Kullanıcı sayısına göre düğüm opaklığını ayarlayın
             var minOpacity = 0.8;
-            var maxOpacity = 1;
+            var maxOpacity = 0.9;
             var userCountFactor = (d.users.length - 1) / (questionData.maxUserCount - 1) || 0;
             var opacity = minOpacity + (maxOpacity - minOpacity) * userCountFactor;
     

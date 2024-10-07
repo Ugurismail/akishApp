@@ -142,10 +142,13 @@ def profile(request, username=None):
     
     return render(request, 'core/profile.html', context)
 
+from django.db.models import Count, Q
+
 @login_required
 def question_detail(request, question_id):
     # Retrieve question and related data
     question = get_object_or_404(Question, id=question_id)
+    
     answers_list = Answer.objects.filter(question=question).order_by('created_at')
     subquestions = question.subquestions.all()
 
@@ -161,8 +164,9 @@ def question_detail(request, question_id):
     question_save_count = SavedItem.objects.filter(question=question).count()
 
     # Get save counts for paginated answers
-    answer_save_counts = SavedItem.objects.filter(answer__in=answers_page_obj).values('answer_id').annotate(count=Count('id'))
-    answer_save_dict = {item['answer_id']: item['count'] for item in answer_save_counts}
+    # We need to adjust 'answer_id' to 'answer__id' in the values()
+    answer_save_counts = SavedItem.objects.filter(answer__in=answers_page_obj).values('answer__id').annotate(count=Count('id'))
+    answer_save_dict = {item['answer__id']: item['count'] for item in answer_save_counts}
 
     # Get IDs of answers saved by the user
     saved_answer_ids = SavedItem.objects.filter(user=request.user, answer__in=answers_page_obj).values_list('answer__id', flat=True)
@@ -189,6 +193,7 @@ def question_detail(request, question_id):
         'question_save_count': question_save_count,
     }
     return render(request, 'core/question_detail.html', context)
+
 
 
 def custom_error(request, exception=None):
@@ -603,17 +608,23 @@ def save_item(request):
             saved_item, created = SavedItem.objects.get_or_create(user=request.user, question=question)
             if not created:
                 saved_item.delete()  # Zaten kayıtlıysa kaldır
-                return JsonResponse({'status': 'removed'})
+                status = 'removed'
             else:
-                return JsonResponse({'status': 'saved'})
+                status = 'saved'
+            # Güncellenmiş kaydetme sayısını alın
+            save_count = SavedItem.objects.filter(question=question).count()
+            return JsonResponse({'status': status, 'save_count': save_count})
         elif content_type == 'answer':
             answer = Answer.objects.get(id=object_id)
             saved_item, created = SavedItem.objects.get_or_create(user=request.user, answer=answer)
             if not created:
                 saved_item.delete()  # Zaten kayıtlıysa kaldır
-                return JsonResponse({'status': 'removed'})
+                status = 'removed'
             else:
-                return JsonResponse({'status': 'saved'})
+                status = 'saved'
+            # Güncellenmiş kaydetme sayısını alın
+            save_count = SavedItem.objects.filter(answer=answer).count()
+            return JsonResponse({'status': status, 'save_count': save_count})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def search_questions(request):
