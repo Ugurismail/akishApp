@@ -1,8 +1,10 @@
 {% extends 'core/base.html' %}
 {% load static %}
+{% load custom_tags %}
 {% block content %}
 <div class="container mt-4">
-    <h1>{{ profile_user.username }}'ın Profili</h1>
+    <h1>{{ profile_user.username }} </h1>
+    <small>127 - 12 - 1 - 0</small>
     {% if profile_user == request.user %}
         <p>Davet Hakkınız: {{ request.user.userprofile.invitation_quota }}</p>
         <a href="{% url 'send_invitation' %}" class="btn btn-primary">Davet Gönder</a>
@@ -36,9 +38,10 @@
             <!-- Questions and Answers Tab -->
             <div class="tab-pane fade show active" id="questions" role="tabpanel" aria-labelledby="questions-tab">
                 <h4 class="mt-3">Sorduğunuz Sorular</h4>
+                
                 <ul class="list-group">
                     {% for question in questions %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <li class="list-group-item d-flex justify-content-between align-items-center m-1">
                             <a href="{% url 'question_detail' question.id %}">
                                 {{ question.question_text }}
                             </a>
@@ -54,15 +57,15 @@
                 <h4 class="mt-4">Verdiğiniz Yanıtlar</h4>
                 <ul class="list-group">
                     {% for answer in answers %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <li class="list-group-item d-flex justify-content-between align-items-center m-1">
                             <div>
-                                <p>{{ answer.answer_text|safe }}</p>
                                 <small>
                                     Soru:
                                     <a href="{% url 'question_detail' answer.question.id %}">
                                         {{ answer.question.question_text }}
                                     </a>
                                 </small>
+                                <p>{{ answer.answer_text|safe }}</p>
                             </div>
                             <!-- Silme İkonu -->
                             <a href="{% url 'delete_answer' answer.id %}" class="text-danger" title="Sil">
@@ -194,7 +197,7 @@
             {% endfor %}
         </ul>
 
-        <h4 class="mt-4">{{ profile_user.username }}'ın Verdiği Yanıtlar</h4>
+        <h4 class="mt-4">{{ profile_user.username }}: Verdiği Yanıtlar</h4>
         <ul class="list-group">
             {% for answer in answers %}
                 <li class="list-group-item">

@@ -13,8 +13,9 @@
                         <i class="bi bi-geo-alt-fill"></i>
                     </a>
                 </h2>
+                {% include 'core/pagination.html' with page_obj=answers page_param='page' %}
             </div>
-            {% include 'core/pagination.html' with page_obj=answers page_param='page' %}
+
             
                 <!-- Soruya Oy Verme ve Kaydetme -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -192,74 +193,73 @@
         <div class="col-md-3">
             <!-- Alt Sorular -->
             <div class="mb-4">
-
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <div>
-                <a href="{% url 'add_subquestion' question.id %}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-chevron-double-down" title="Alt Soru Ekle"></i>
-                </a>
-                {% if question.parent_questions.count == 1 %}
-                    <!-- Tek Üst Soru Varsa -->
-                    {% with parent=question.parent_questions.first %}
-                        <a href="{% url 'question_detail' parent.id %}" class="btn btn-outline-secondary btn-sm ms-2">
-                            <i class="bi bi-chevron-double-up" title="Üst Soruya Git"></i>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        
+                        <a href="{% url 'add_subquestion' question.id %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-chevron-double-down" title="Alt Soru Ekle">Alt Soru Ekle</i>
                         </a>
-                    {% endwith %}
-                {% elif question.parent_questions.count > 1 %}
-                    <!-- Birden Fazla Üst Soru Varsa -->
-                    <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#parentQuestionsModal">
-                        <i class="bi bi-chevron-double-up" title="Üst Soruya Git"></i>
-                    </button>
-                    <!-- Modal -->
-                    <div class="modal fade" id="parentQuestionsModal" tabindex="-1" aria-labelledby="parentQuestionsModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Üst Sorular</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <ul class="list-group">
-                                        {% for parent in question.parent_questions.all %}
-                                            <li class="list-group-item">
-                                                <a href="{% url 'question_detail' parent.id %}">{{ parent.question_text }}</a>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
+                        {% if question.parent_questions.count == 1 %}
+                            <!-- Tek Üst Soru Varsa -->
+                            {% with parent=question.parent_questions.first %}
+                                <a href="{% url 'question_detail' parent.id %}" class="btn btn-outline-secondary btn-sm ms-2">
+                                    <i class="bi bi-chevron-double-up" title="Üst Soruya Git">Üst Soruya Git</i>
+                                </a>
+                            {% endwith %}
+                        {% elif question.parent_questions.count > 1 %}
+                            <!-- Birden Fazla Üst Soru Varsa -->
+                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#parentQuestionsModal">
+                                <i class="bi bi-chevron-double-up" title="Üst Soruya Git">Üst Soruya Git</i>
+                            </button>
+                            <!-- Modal -->
+                            <div class="modal fade" id="parentQuestionsModal" tabindex="-1" aria-labelledby="parentQuestionsModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Üst Sorular</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <ul class="list-group">
+                                                {% for parent in question.parent_questions.all %}
+                                                    <li class="list-group-item">
+                                                        <a href="{% url 'question_detail' parent.id %}">{{ parent.question_text }}</a>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        {% endif %}
                     </div>
-                {% endif %}
+                </div>
+                <ul class="list-group">
+                    {% if question.subquestions.all %}
+                        {% for subquestion in question.subquestions.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="{% url 'question_detail' subquestion.id %}">
+                                        {{ subquestion.question_text }}
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">
+                                        <a href="{% url 'profile' subquestion.user.username %}">{{ subquestion.user.username }}</a>
+                                    </small>
+                                </div>
+                                <!-- Haritada Gör İkonu -->
+                                <a href="{% url 'question_map' %}?question_id={{ subquestion.id }}" title="Haritada Gör">
+                                    <i class="bi bi-geo-alt"></i>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="list-group-item">Bu sorunun henüz alt sorusu yok.</li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
-        <ul class="list-group">
-            {% if question.subquestions.all %}
-                {% for subquestion in question.subquestions.all %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <a href="{% url 'question_detail' subquestion.id %}">
-                                {{ subquestion.question_text }}
-                            </a>
-                            <br>
-                            <small class="text-muted">
-                                <a href="{% url 'profile' subquestion.user.username %}">{{ subquestion.user.username }}</a>
-                            </small>
-                        </div>
-                        <!-- Haritada Gör İkonu -->
-                        <a href="{% url 'question_map' %}?question_id={{ subquestion.id }}" title="Haritada Gör">
-                            <i class="bi bi-geo-alt"></i>
-                        </a>
-                    </li>
-                {% endfor %}
-            {% else %}
-                <li class="list-group-item">Bu sorunun henüz alt sorusu yok.</li>
-            {% endif %}
-        </ul>
-            </div>
-            <!-- İlgili Sorular veya Ek İçerik -->
-            <!-- Buraya isteğe bağlı olarak başka içerikler ekleyebilirsiniz -->
-        </div>
+
     </div>
 </div>
 
@@ -292,7 +292,7 @@
 <!-- Modals -->
 {% include 'core/link_modal.html' %}
 {% include 'core/reference_modal.html' %}
-{% include 'core/pagination.html' with page_obj=answers page_param='page' %}
+
 
 
 {% endblock %}

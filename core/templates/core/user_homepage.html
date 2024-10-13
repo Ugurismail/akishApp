@@ -120,7 +120,7 @@
 
         <!-- Right Column: Your Starting Questions -->
         <div class="col-md-3" style="border-left: 1px solid #ccc;">
-            <h4>Başlangıç Sorularınız</h4>
+            <h5>Başlangıç Sorularınız</h5>
             {% if starting_questions %}
                 <ul class="list-unstyled">
                     {% for item in starting_questions %}
@@ -136,7 +136,7 @@
                 <p>Henüz başlangıç sorunuz yok.</p>
             {% endif %}
             <!-- "Başlangıç Sorusu Ekle" Butonu -->
-            <a href="{% url 'add_starting_question' %}" class="btn btn-primary mt-2">Başlangıç Sorusu Ekle</a>
+            <a href="{% url 'add_starting_question' %}" class="btn btn-primary mt-2 col-12">Başlangıç Sorusu Ekle</a>
             {% include 'core/pagination.html' with page_obj=starting_questions page_param='starting_page' %}
         </div>
         
